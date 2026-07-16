@@ -3,7 +3,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // You can obtain one at https://mozilla.org/MPL/2.0/
 
-import type { UserScriptInterface } from "./user_base";
+import type { UserScriptBase } from "./user_base";
 import type { PolicyScriptBase } from "./policy_base";
 import type { Task } from "./psst_utils";
 
@@ -11,6 +11,7 @@ export interface UserScriptData {
   user_id: string | undefined;
   share_experience_link: string;
   site_name: string;
+  initial_execution: boolean;
   tasks: Task[];
 }
 
@@ -28,7 +29,7 @@ declare global {
     const params: string | PolicyScriptInputData | undefined;
 
     interface Window {
-        UserScriptInstance: UserScriptInterface;
+        UserScriptInstance: UserScriptBase;
         PolicyScriptInstance: PolicyScriptBase;
     }
 }

@@ -5,7 +5,7 @@
 
 import type { PolicyScriptInputData } from "./declarations";
 import { logger } from "./logger";
-import { calculateProgress, moveCurrentTask, PsstState, type PsstData, type Task } from "./psst_utils";
+import { calculateProgress, moveCurrentTask, PSST_LOCALSTORAGE_KEY, PsstState, type PsstData, type Task } from "./psst_utils";
 
 
 export interface PolicyScriptResult {
@@ -16,7 +16,6 @@ export interface PolicyScriptResult {
 export abstract class PolicyScriptBase {
     static readonly WAIT_FOR_PAGE_TIMEOUT = 1000;
     static readonly WAIT_FOR_PAGE_ATTEMPTS_COUNT = 6;
-    static readonly PSST_LOCALSTORAGE_KEY = 'psst';
 
     protected params: PolicyScriptInputData;
 
@@ -91,7 +90,7 @@ export abstract class PolicyScriptBase {
 
     protected loadPsstDataFromLocalStorage(): PsstData | undefined {
         try {
-            const stored = localStorage.getItem(PolicyScriptBase.PSST_LOCALSTORAGE_KEY);
+            const stored = localStorage.getItem(PSST_LOCALSTORAGE_KEY);
             if (!stored) {
                 if (__DEV__) logger.info('No existing PsstData found in localStorage.');
                 return undefined;
@@ -116,7 +115,7 @@ export abstract class PolicyScriptBase {
     protected savePsstDataToStorage(psstData: PsstData): void {
         try {
             if (__DEV__) logger.info('Saving PsstData to localStorage:', psstData);
-            localStorage.setItem(PolicyScriptBase.PSST_LOCALSTORAGE_KEY, JSON.stringify(psstData));
+            localStorage.setItem(PSST_LOCALSTORAGE_KEY, JSON.stringify(psstData));
         } catch (error) {
             logger.error('Failed to save PsstData to localStorage:', error);
         }

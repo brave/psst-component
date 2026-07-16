@@ -3,6 +3,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // You can obtain one at https://mozilla.org/MPL/2.0/
 
+import { logger } from "./logger";
+
 export  interface Task {
   uid: string;
   url: string;
@@ -26,6 +28,27 @@ export interface PsstData {
     tasks_list: Task[];
 }
 
+export const PSST_LOCALSTORAGE_KEY = 'psst';
+
+export const isInitialExecution = () => {
+  if (typeof localStorage === 'undefined') {
+    return true;
+  }
+
+  const stored = localStorage.getItem(PSST_LOCALSTORAGE_KEY);
+  if (stored === null) {
+    return true;
+  }
+
+  try {
+    const parsed = JSON.parse(stored);
+    return parsed.state === PsstState.COMPLETED;
+  } catch (error) {
+    if (__DEV__) logger.error('Failed to parse PsstData from localStorage:', error);
+    return true;
+  }
+}
+  
 export const moveCurrentTask = (psstObj: PsstData | undefined, errorMessage: string | undefined) => {
   if (!psstObj?.current_task) {
     return;

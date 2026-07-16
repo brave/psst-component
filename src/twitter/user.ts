@@ -21,17 +21,16 @@
 
 import type { UserScriptData } from '../common/declarations';
 import { logger } from '../common/logger';
-import type { UserScriptInterface } from '../common/user_base';
+import { UserScriptBase } from '../common/user_base';
 
 const TWID_COOKIE_NAME = 'twid';
 
-export class TwitterUserScript implements UserScriptInterface {
-    readonly version = 4;
+export class TwitterUserScript extends UserScriptBase {
+    readonly version = 5;
     readonly includeUrlPatterns: string[] = ['https://x.com/*'];
     readonly excludeUrlPatterns: string[] = [];
     readonly userScript: string = 'user.js';
     readonly policyScript: string = 'policy.js';
-
 
     getUserId(): string | undefined {
         const twidCookie = document.cookie
@@ -45,10 +44,8 @@ export class TwitterUserScript implements UserScriptInterface {
         return value || undefined;
     }
 
-    getTasks(): UserScriptData | undefined {
-        if (__DEV__) logger.info('Getting tasks for user ID:', this.getUserId());
-        const userData: UserScriptData = {
-            user_id: this.getUserId(),
+    protected getSiteScriptData(): Omit<UserScriptData, 'user_id' | 'initial_execution'> {
+        return {
             share_experience_link: "https://x.com/intent/post?text=$1",
             site_name: 'x.com',
             tasks: [
@@ -94,10 +91,6 @@ export class TwitterUserScript implements UserScriptInterface {
             }
             ]
         };
-
-        if (__DEV__) logger.info('Constructed UserScriptData:', userData);
-        // Return statement removed because arrow functions returning objects need parentheses
-        return userData;
     }
 
 }
