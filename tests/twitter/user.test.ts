@@ -5,6 +5,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import type { UserScriptData } from '../../src/common/declarations';
+import { PSST_LOCALSTORAGE_KEY, PsstState } from '../../src/common/psst_utils';
 import type { Task } from '../../src/common/psst_utils';
 import { TwitterUserScript } from '../../src/twitter/user';
 
@@ -68,6 +69,7 @@ describe('TwitterUserScript.getUserId', () => {
 describe('TwitterUserScript.getTasks', () => {
   beforeEach(() => {
     setCookieJar(`${TWID_COOKIE_NAME}=test_user`);
+    localStorage.clear();
   });
 
   it('returns a UserScriptData object with the correct shape', () => {
@@ -116,5 +118,27 @@ describe('TwitterUserScript.getTasks', () => {
     const instance = new TwitterUserScript();
     const data = instance.getTasks() as UserScriptData;
     expect(data.user_id).toBe(instance.getUserId());
+  });
+
+  it('sets initial_execution to true when no psst state is stored', () => {
+    const instance = new TwitterUserScript();
+    const data = instance.getTasks() as UserScriptData;
+    expect(data.initial_execution).toBe(true);
+  });
+
+  it('sets initial_execution to false when psst state is STARTED', () => {
+    localStorage.setItem(
+        PSST_LOCALSTORAGE_KEY, JSON.stringify({state: PsstState.STARTED}));
+    const instance = new TwitterUserScript();
+    const data = instance.getTasks() as UserScriptData;
+    expect(data.initial_execution).toBe(false);
+  });
+
+  it('sets initial_execution to true when psst state is COMPLETED', () => {
+    localStorage.setItem(
+        PSST_LOCALSTORAGE_KEY, JSON.stringify({state: PsstState.COMPLETED}));
+    const instance = new TwitterUserScript();
+    const data = instance.getTasks() as UserScriptData;
+    expect(data.initial_execution).toBe(true);
   });
 });
