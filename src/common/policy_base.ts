@@ -54,10 +54,10 @@ export abstract class PolicyScriptBase {
     }
 
     try {
-      const current_task = psstObj.current_task 
+      const current_task = psstObj.current_task;
       await this.waitForSettingAppliedWithTimeout(
-              current_task?.selector, current_task?.turn_off)
-      moveCurrentTask(psstObj, undefined)
+              current_task?.selector, current_task?.turn_off);
+      moveCurrentTask(psstObj, undefined);
     } catch (error) {
       moveCurrentTask(psstObj, (error as Error).message);
     }
@@ -73,11 +73,10 @@ export abstract class PolicyScriptBase {
     });
 
     const nextUrl = hasMoreTasks ? next_task.url : psstObj.start_url;
-    psstObj.progress = calculateProgress(psstObj)
+    psstObj.progress = calculateProgress(psstObj);
 
-                           this.savePsstDataToStorage(psstObj);
-    const result: PolicyScriptResult = {next_url: nextUrl, psst: psstObj};
-    return result;
+    this.savePsstDataToStorage(psstObj);
+    return {next_url: nextUrl, psst: psstObj};
   }
 
 
@@ -104,7 +103,7 @@ export abstract class PolicyScriptBase {
         tasks_list: parsed.tasks_list ?? []
       } as PsstData;
     } catch (error) {
-      logger.error('Failed to parse PsstData from localStorage:', error);
+      if (__DEV__) logger.error('Failed to parse PsstData from localStorage:', error);
       return undefined;
     }
   }
@@ -114,7 +113,7 @@ export abstract class PolicyScriptBase {
       if (__DEV__) logger.info('Saving PsstData to localStorage:', psstData);
       localStorage.setItem(PSST_LOCALSTORAGE_KEY, JSON.stringify(psstData));
     } catch (error) {
-      logger.error('Failed to save PsstData to localStorage:', error);
+      if (__DEV__) logger.error('Failed to save PsstData to localStorage:', error);
     }
   }
 

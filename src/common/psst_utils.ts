@@ -42,8 +42,9 @@ export const isInitialExecution =
       }
 
       try {
-        const parsed = JSON.parse(stored);
-        return parsed.state === PsstState.COMPLETED;
+        const parsed: unknown = JSON.parse(stored);
+        const state = (parsed as {state?: unknown} | null | undefined)?.state;
+        return state !== PsstState.STARTED;
       } catch (error) {
         if (__DEV__)
           logger.error('Failed to parse PsstData from localStorage:', error);

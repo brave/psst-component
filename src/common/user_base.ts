@@ -21,17 +21,20 @@ export abstract class UserScriptBase {
 
   getTasks(): UserScriptData|undefined {
     try {
-      if (__DEV__) logger.info('Getting tasks for user ID:', this.getUserId());
+      const userId = this.getUserId();
+      if (__DEV__) logger.info('Getting tasks for user ID:', userId);
+
       const userData: UserScriptData = {
-        user_id: this.getUserId(),
+        user_id: userId,
         initial_execution: isInitialExecution(),
         ...this.getSiteScriptData()
       };
       if (__DEV__)
         logger.info('Constructed UserScriptData:', JSON.stringify(userData));
       return userData;
-    } catch {
-      return undefined
+    } catch (error) {
+      if (__DEV__) logger.error('Failed to construct UserScriptData:', error);
+      return undefined;
     }
   }
 }
