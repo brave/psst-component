@@ -56,6 +56,7 @@ export class TwitterUserScript extends UserScriptBase {
           description: 'Disable attaching location information to posts',
           selector:
               '#react-root > div > div > div.css-175oi2r.r-1f2l425.r-13qz1uu.r-417010.r-18u37iz > main > div > div > div > section:nth-child(2) > div.css-175oi2r.r-qocrb3.r-14lw9ot.r-1h0z5md.r-1jx8gzb.r-f8sm7e.r-13qz1uu.r-1ye8kvj > div > div.css-175oi2r.r-w7s2jr.r-14lw9ot.r-3pj75a > div > label > div > div.css-175oi2r.r-lrvibr > input',
+          modal_selectors: undefined,
           turn_off: true,
           error_description: undefined
         },
@@ -66,6 +67,7 @@ export class TwitterUserScript extends UserScriptBase {
               'Disable sharing additional information with X’s business partners.',
           selector:
               '#react-root > div > div > div.css-175oi2r.r-1f2l425.r-13qz1uu.r-417010.r-18u37iz > main > div > div > div > section:nth-child(2) > div.css-175oi2r.r-qocrb3.r-14lw9ot.r-1h0z5md.r-1jx8gzb.r-f8sm7e.r-13qz1uu.r-1ye8kvj > div.css-175oi2r.r-w7s2jr.r-14lw9ot.r-3pj75a > div > div > label > div > div.css-175oi2r.r-lrvibr > input',
+          modal_selectors: undefined,
           turn_off: true,
           error_description: undefined
         },
@@ -76,6 +78,7 @@ export class TwitterUserScript extends UserScriptBase {
               'Disable personalization based on your inferred identity',
           selector:
               '#react-root > div > div > div.css-175oi2r.r-1f2l425.r-13qz1uu.r-417010.r-18u37iz > main > div > div > div > section:nth-child(2) > div.css-175oi2r.r-qocrb3.r-14lw9ot.r-1h0z5md.r-1jx8gzb.r-f8sm7e.r-13qz1uu.r-1ye8kvj > div.css-175oi2r.r-w7s2jr.r-14lw9ot.r-3pj75a > div > div > label > div > div.css-175oi2r.r-lrvibr > input',
+          modal_selectors: undefined,
           turn_off: true,
           error_description: undefined
         },
@@ -85,6 +88,7 @@ export class TwitterUserScript extends UserScriptBase {
           description: 'Disable personalized ads',
           selector:
               '#react-root > div > div > div.css-175oi2r.r-1f2l425.r-13qz1uu.r-417010.r-18u37iz > main > div > div > div > section:nth-child(2) > div.css-175oi2r.r-qocrb3.r-14lw9ot.r-1h0z5md.r-1jx8gzb.r-f8sm7e.r-13qz1uu.r-1ye8kvj > div.css-175oi2r.r-w7s2jr.r-14lw9ot.r-3pj75a > div > div > label > div > div.css-175oi2r.r-lrvibr > input',
+          modal_selectors: undefined,
           turn_off: true,
           error_description: undefined
         },
@@ -93,6 +97,7 @@ export class TwitterUserScript extends UserScriptBase {
           url: 'https://x.com/settings/ads_preferences12345',
           description: 'It should be failed',
           selector: '#blabla',
+          modal_selectors: undefined,
           turn_off: true,
           error_description: undefined
         }

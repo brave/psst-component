@@ -11,7 +11,7 @@ import type { UserScriptInterface } from '../common/user_base';
 // identified by the display name rendered in the account menu instead.
 const USER_IDENTIFIER_SELECTOR = '#radix-_R_3alalpakoac97l35_ > div.flex.min-w-0.items-center.gap-2 > div.min-w-0 > div.flex.min-w-0.grow.items-center.gap-2\\.5 > div';
 
-export class ChatGptUserScript implements UserScriptInterface {
+export class ChatgptUserScript implements UserScriptInterface {
     readonly version = 1;
     readonly includeUrlPatterns: string[] = ['https://chatgpt.com/*'];
     readonly excludeUrlPatterns: string[] = [];
@@ -39,6 +39,12 @@ export class ChatGptUserScript implements UserScriptInterface {
                 url: 'https://chatgpt.com/',
                 description: 'Disable "Improve the model for everyone" so conversations are not used to train OpenAI models',
                 selector: '#radix-_r_av_ > div > div.pb-8 > div > div.flex.items-center.gap-1 > button > span',
+                modal_selectors: [
+                 '#radix-_R_3alalpakoac97l35_ > div.flex.min-w-0.items-center.gap-2 > div.min-w-0 > div.not-group-data-disabled\:text-token-text-tertiary.leading-dense.mb-0\.5.text-xs.whitespace-normal.group-data-sheet-item\:mt-0\.5.group-data-sheet-item\:mb-0.dark\:group-hover\:text-token-text-secondary.dark\:group-focus-visible\:text-token-text-secondary.dark\:group-data-\[highlighted\]\:text-token-text-secondary.dark\:group-data-\[state\=open\]\:text-token-text-secondary',
+                 '#radix-_R_dalan5aj19h4ukcmH1_ > div > div:nth-child(6)',
+                 '#radix-_r_as_-trigger-DataControls > div.flex.min-w-0.grow.items-center.gap-2\.5',
+                 '#radix-_r_as_-content-DataControls > section > div:nth-child(2) > div > button > div > div.text-token-text-secondary.flex.min-h-\[38px\].items-center.ps-3'
+                ],
                 turn_off: true,
                 error_description: undefined
             }
@@ -52,7 +58,7 @@ export class ChatGptUserScript implements UserScriptInterface {
 }
 
 
-window.UserScriptInstance = new ChatGptUserScript();
+window.UserScriptInstance = new ChatgptUserScript();
 
 // The bundle's value is surfaced via a default export (see webpack.config.js
 // `output.library`). A trailing IIFE cannot work here: webpack wraps every
