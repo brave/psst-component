@@ -8,7 +8,7 @@ import { PolicyScriptBase } from "../common/policy_base";
 
 
 export class TwitterPolicyScript extends PolicyScriptBase {
-    waitForSettingAppliedWithTimeout(selector: string | undefined, turnOff: boolean): Promise<void> {
+    waitForSettingAppliedWithTimeout(selector: string | undefined, turnOff: boolean, modalSelectors: string[] | undefined): Promise<void> {
         return new Promise((resolve, reject) => {
             let intervalId: number | null = null;
             let attemptCount = 0;

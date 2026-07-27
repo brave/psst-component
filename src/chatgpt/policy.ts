@@ -10,12 +10,12 @@ import { waitForElement } from "../common/psst_utils";
 
 
 export class ChatGptPolicyScript extends PolicyScriptBase {
-    waitForSettingAppliedWithTimeout(selector: string | undefined, turnOff: boolean): Promise<void> {
+    async waitForSettingAppliedWithTimeout(selector: string | undefined, turnOff: boolean, modalSelectors: string[] | undefined): Promise<void> {
+        await this.clickModalSelectors(modalSelectors);
+
         return new Promise((resolve, reject) => {
             let intervalId: number | null = null;
             let attemptCount = 0;
-
-            this.openSettingsMenu();
 
             const wrappedResolve = () => {
             if (intervalId) clearInterval(intervalId);
@@ -39,17 +39,20 @@ export class ChatGptPolicyScript extends PolicyScriptBase {
         });
     }
 
-    private async openSettingsMenu() {
-        const menuOpenBtnSelector = '#radix-_R_3alalpakoac97l35_ > div.flex.min-w-0.items-center.gap-2 > div.min-w-0 > div.not-group-data-disabled\:text-token-text-tertiary.leading-dense.mb-0\.5.text-xs.whitespace-normal.group-data-sheet-item\:mt-0\.5.group-data-sheet-item\:mb-0.dark\:group-hover\:text-token-text-secondary.dark\:group-focus-visible\:text-token-text-secondary.dark\:group-data-\[highlighted\]\:text-token-text-secondary.dark\:group-data-\[state\=open\]\:text-token-text-secondary';
-        const menuOpenBtn = await waitForElement(menuOpenBtnSelector);
-
-        if (menuOpenBtn instanceof HTMLElement) {
-            if (__DEV__) logger.info('Found the menu open button');
-            menuOpenBtn.click();
-        } else {
-            if (__DEV__) logger.info('Not found the menu open button');
+    private async clickModalSelectors(modalSelectors: string[] | undefined): Promise<void> {
+        if (!modalSelectors || modalSelectors.length === 0) {
+            if (__DEV__) logger.error('No modal selectors provided');
+            return;
         }
 
+        for (let index = 0; index < modalSelectors.length; index++) {
+            const modalSelector = modalSelectors[index]
+            if (modalSelector) {
+                const element = await waitForElement(modalSelector);
+                if (__DEV__) logger.debug(`Clicked modal selector ${index + 1}/${modalSelectors.length}: "${modalSelector}"`);
+                element.click();
+            }
+        }
     }
 
     private checkCheckboxes(resolve: () => void, reject: (errorDescription: string | null) => void, selector: string | undefined, turnOff: boolean) {

@@ -65,7 +65,8 @@ export const moveCurrentTask =
         description: psstObj.current_task.description,
         selector: psstObj.current_task.selector,
         turn_off: psstObj.current_task.turn_off,
-        error_description: errorMessage
+        modal_selectors: psstObj.current_task.modal_selectors,
+    error_description: errorMessage
       };
 
       psstObj.applied_tasks.push(completedTask);

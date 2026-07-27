@@ -23,8 +23,7 @@ export abstract class PolicyScriptBase {
     this.params = this.parseParams();
   }
 
-  abstract waitForSettingAppliedWithTimeout(
-      selector: string|undefined, turn_off: boolean|undefined): Promise<void>;
+    abstract waitForSettingAppliedWithTimeout(selector: string | undefined, turn_off: boolean | undefined, modal_selectors: string[] | undefined): Promise<void>;
 
   async applyPolicies(): Promise<PolicyScriptResult> {
     if (__DEV__)
@@ -53,14 +52,13 @@ export abstract class PolicyScriptBase {
       return {next_url: undefined, psst: psstObj};
     }
 
-    try {
-      const current_task = psstObj.current_task;
-      await this.waitForSettingAppliedWithTimeout(
-              current_task?.selector, current_task?.turn_off);
-      moveCurrentTask(psstObj, undefined);
-    } catch (error) {
-      moveCurrentTask(psstObj, (error as Error).message);
-    }
+        try {
+            const current_task = psstObj.current_task
+            await this.waitForSettingAppliedWithTimeout(current_task?.selector, current_task?.turn_off, current_task?.modal_selectors)
+            moveCurrentTask(psstObj, undefined)
+        } catch (error) {
+            moveCurrentTask(psstObj, (error as Error).message);
+        }
 
     const next_task = psstObj.tasks_list[0] || null;
     const hasMoreTasks = next_task !== null;
