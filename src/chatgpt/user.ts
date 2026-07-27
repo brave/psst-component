@@ -5,13 +5,13 @@
 
 import type { UserScriptData } from '../common/declarations';
 import { logger } from '../common/logger';
-import type { UserScriptInterface } from '../common/user_base';
+import { UserScriptBase } from '../common/user_base';
 
 // chatgpt.com has no readable (non-HttpOnly) session cookie, so the user is
 // identified by the display name rendered in the account menu instead.
 const USER_IDENTIFIER_SELECTOR = '[data-testid="accounts-profile-button"] .truncate';
 
-export class ChatgptUserScript implements UserScriptInterface {
+export class ChatgptUserScript extends UserScriptBase {
     readonly version = 1;
     readonly includeUrlPatterns: string[] = ['https://chatgpt.com/*'];
     readonly excludeUrlPatterns: string[] = [];
@@ -28,10 +28,9 @@ export class ChatgptUserScript implements UserScriptInterface {
         return userElement.textContent.trim() || undefined;
     }
 
-    getTasks(): UserScriptData | undefined {
-        if (__DEV__) logger.info('Getting tasks for user ID:', this.getUserId());
-        const userData: UserScriptData = {
-            user_id: this.getUserId(),
+    protected getSiteScriptData():
+      Omit<UserScriptData, 'user_id'|'initial_execution'> {
+        return {
             share_experience_link: "https://x.com/intent/post?text=$1",
             site_name: 'chatgpt.com',
             tasks: [
@@ -51,9 +50,6 @@ export class ChatgptUserScript implements UserScriptInterface {
             }
             ]
         };
-
-        if (__DEV__) logger.info('Constructed UserScriptData:', userData);
-        return userData;
     }
 
 }

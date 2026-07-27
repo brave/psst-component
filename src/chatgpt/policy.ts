@@ -49,7 +49,7 @@ export class ChatGptPolicyScript extends PolicyScriptBase {
             const modalSelector = modalSelectors[index]
             if (modalSelector) {
                 const element = await waitForElement(modalSelector);
-                if (__DEV__) logger.debug(`Clicked modal selector ${index + 1}/${modalSelectors.length}: "${modalSelector}"`);
+                if (__DEV__) logger.debug(`Element: ${element !== null && element !== undefined} Clicked modal selector ${index + 1}/${modalSelectors.length}: "${modalSelector}"`);
                 element.click();
             }
         }
