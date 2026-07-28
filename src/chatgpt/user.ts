@@ -7,9 +7,16 @@ import type { UserScriptData } from '../common/declarations';
 import { logger } from '../common/logger';
 import { UserScriptBase } from '../common/user_base';
 
-// chatgpt.com has no readable (non-HttpOnly) session cookie, so the user is
-// identified by the display name rendered in the account menu instead.
+// The display name rendered in the account menu is used as a fallback when
+// the oai-client-auth-info cookie is missing or unparsable.
 const USER_IDENTIFIER_SELECTOR = '[data-testid="accounts-profile-button"] .truncate';
+const AUTH_INFO_COOKIE_NAME = 'oai-client-auth-info';
+
+interface AuthInfoCookie {
+    user?: {
+        name?: string;
+    };
+}
 
 export class ChatgptUserScript extends UserScriptBase {
     readonly version = 1;
@@ -19,6 +26,12 @@ export class ChatgptUserScript extends UserScriptBase {
     readonly policyScript: string = 'policy.js';
 
     getUserId(): string | undefined {
+        const nameFromCookie = this.getUserNameFromAuthInfoCookie();
+        if (nameFromCookie) {
+            if (__DEV__) logger.debug(`Extracted user name:${nameFromCookie ?? 'N/A'}`);
+            return nameFromCookie;
+        }
+
         const userElement = document.querySelector(USER_IDENTIFIER_SELECTOR);
         if (!userElement || !userElement.textContent) {
             if (__DEV__) logger.error(`User identifier element not found for selector ${USER_IDENTIFIER_SELECTOR}.`);
@@ -26,6 +39,23 @@ export class ChatgptUserScript extends UserScriptBase {
         }
         if (__DEV__) logger.debug(`userElement.textContent:${userElement?.textContent ?? 'N/A'}`);
         return userElement.textContent.trim() || undefined;
+    }
+
+    private getUserNameFromAuthInfoCookie(): string | undefined {
+        const prefix = `${AUTH_INFO_COOKIE_NAME}=`;
+        const rawCookie = document.cookie.split('; ').find(row => row.startsWith(prefix));
+        if (!rawCookie) {
+            return undefined;
+        }
+        try {
+            const value = rawCookie.slice(prefix.length);
+            const data: AuthInfoCookie = JSON.parse(decodeURIComponent(value));
+            const name = data.user?.name;
+            return typeof name === 'string' ? name.trim() || undefined : undefined;
+        } catch (error) {
+            if (__DEV__) logger.error(`Failed to parse ${AUTH_INFO_COOKIE_NAME} cookie:`, error);
+            return undefined;
+        }
     }
 
     protected getSiteScriptData():
@@ -55,9 +85,7 @@ export class ChatgptUserScript extends UserScriptBase {
             ]
         };
     }
-
 }
-
 
 window.UserScriptInstance = new ChatgptUserScript();
 

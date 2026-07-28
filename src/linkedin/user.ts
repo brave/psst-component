@@ -4,7 +4,30 @@
 // You can obtain one at https://mozilla.org/MPL/2.0/
 
 import type {UserScriptData} from '../common/declarations';
+import { logger } from '../common/logger';
 import {UserScriptBase} from '../common/user_base';
+
+const LIAP_COOKIE_NAME = 'liap';
+const CACHE_COOKIE_NAME = 'psst_linkedin_uid';
+const CACHE_TTL_SECONDS = 60;
+
+interface CachedUid {
+  uid: string;
+}
+
+function readCookie(name: string): string|undefined {
+  const prefix = `${name}=`;
+  const cookie = document.cookie.split('; ').find(row => row.startsWith(prefix));
+  return cookie ? cookie.slice(prefix.length) || undefined : undefined;
+}
+
+function writeCookie(name: string, value: string, maxAgeSeconds: number): void {
+  document.cookie = `${name}=${value}; max-age=${maxAgeSeconds}; path=/`;
+}
+
+function deleteCookie(name: string): void {
+  document.cookie = `${name}=; max-age=0; path=/`;
+}
 
 export class LinkedinUserScript extends UserScriptBase {
   readonly version = 1;
@@ -14,16 +37,51 @@ export class LinkedinUserScript extends UserScriptBase {
   readonly policyScript: string = 'policy.js';
 
   getUserId(): string|undefined {
-    const legacyImg = document.querySelector<HTMLImageElement>(
-        'img[class*="global-nav__me"][id*="ember"]');
-    if (legacyImg?.alt) return legacyImg.alt;
+    try {
+      if (readCookie(LIAP_COOKIE_NAME) !== 'true') {
+        deleteCookie(CACHE_COOKIE_NAME);
+        return undefined;
+      }
 
-    const v2Label =
-        document.querySelector('#meMenuV2WideComponentRef [aria-label]');
-    const label = v2Label?.getAttribute('aria-label');    
-    if (label) return label.replace(/\s+Me$/, '');
+      const cachedUid = this.readCachedUid();
+      if (cachedUid) {
+        return cachedUid;
+      }
 
-    return undefined;
+      const profileLink = document.querySelector('a[href*="/in/"]');
+      if (profileLink && profileLink instanceof HTMLAnchorElement) {
+        const match = profileLink.href.match(/\/in\/([a-zA-Z0-9-]+)/);
+        if (match && match[1]) {
+          const cached: CachedUid = {uid: match[1]};
+          writeCookie(
+              CACHE_COOKIE_NAME, encodeURIComponent(JSON.stringify(cached)),
+              CACHE_TTL_SECONDS);
+          return match[1];
+        }
+      }
+      return undefined;
+    } catch (error) {
+      const errorMessage =
+          error instanceof Error ? error.message : String(error);
+      if (__DEV__) logger.error(`Error extracting LinkedIn UID: ${errorMessage}`);
+      return undefined;
+    }
+  }
+
+  private readCachedUid(): string|undefined {
+    const raw = readCookie(CACHE_COOKIE_NAME);
+    if (!raw) {
+      return undefined;
+    }
+    try {
+      const parsed: unknown = JSON.parse(decodeURIComponent(raw));
+      const uid = (parsed as Partial<CachedUid>|null)?.uid;
+      return typeof uid === 'string' && uid ? uid : undefined;
+    } catch (error) {
+      if (__DEV__)
+        logger.error('Failed to parse psst_linkedin_uid cookie:', error);
+      return undefined;
+    }
   }
 
   protected getSiteScriptData():
