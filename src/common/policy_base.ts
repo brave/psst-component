@@ -5,7 +5,7 @@
 
 import type {PolicyScriptInputData} from './declarations';
 import {logger} from './logger';
-import {calculateProgress, moveCurrentTask, PSST_LOCALSTORAGE_KEY, type PsstData, PsstState, type Task} from './psst_utils';
+import {calculateProgress, type ModalSelectorData, moveCurrentTask, PSST_LOCALSTORAGE_KEY, type PsstData, PsstState, type Task} from './psst_utils';
 
 
 export interface PolicyScriptResult {
@@ -23,11 +23,11 @@ export abstract class PolicyScriptBase {
     this.params = this.parseParams();
   }
 
-    abstract waitForSettingAppliedWithTimeout(selector: string | undefined, turn_off: boolean | undefined, modal_selectors: string[] | undefined): Promise<void>;
+    abstract waitForSettingAppliedWithTimeout(selector: string | undefined, turn_off: boolean | undefined, modal_selectors: ModalSelectorData[] | undefined): Promise<void>;
 
   async applyPolicies(): Promise<PolicyScriptResult> {
     if (__DEV__)
-      logger.info('Starting applyPolicies with params:', this.params);
+      logger.info('Starting applyPolicies with params:', JSON.stringify(this.params));
     const psstObj = this.loadPsstDataFromLocalStorage();
     if (!psstObj || this.getParams().initial_execution) {
       const firstTask = this.getParams().tasks[0];
@@ -51,14 +51,17 @@ export abstract class PolicyScriptBase {
     if (psstObj.state === PsstState.COMPLETED) {
       return {next_url: undefined, psst: psstObj};
     }
-
-        try {
-            const current_task = psstObj.current_task
-            await this.waitForSettingAppliedWithTimeout(current_task?.selector, current_task?.turn_off, current_task?.modal_selectors)
-            moveCurrentTask(psstObj, undefined)
-        } catch (error) {
-            moveCurrentTask(psstObj, (error as Error).message);
-        }
+if (__DEV__) logger.debug('applyPolicies before wait #100');
+    try {
+      const current_task = psstObj.current_task;
+      await this.waitForSettingAppliedWithTimeout(
+          current_task?.selector, current_task?.turn_off,
+          current_task?.modal_selectors);
+      moveCurrentTask(psstObj, undefined)
+    } catch (error) {
+      moveCurrentTask(psstObj, (error as Error).message);
+    }
+if (__DEV__) logger.debug('applyPolicies after wait #200');
 
     const next_task = psstObj.tasks_list[0] || null;
     const hasMoreTasks = next_task !== null;
@@ -108,7 +111,7 @@ export abstract class PolicyScriptBase {
 
   protected savePsstDataToStorage(psstData: PsstData): void {
     try {
-      if (__DEV__) logger.info('Saving PsstData to localStorage:', psstData);
+      if (__DEV__) logger.info('Saving PsstData to localStorage:', JSON.stringify(psstData));
       localStorage.setItem(PSST_LOCALSTORAGE_KEY, JSON.stringify(psstData));
     } catch (error) {
       if (__DEV__) logger.error('Failed to save PsstData to localStorage:', error);
@@ -126,7 +129,7 @@ export abstract class PolicyScriptBase {
         (typeof globalThis !== 'undefined' && (globalThis as any).params) ||
         '{}';
     if (__DEV__)
-      logger.info('Parsing PolicyScriptInputData from params:', rawParams);
+      logger.info('Parsing PolicyScriptInputData from params:', JSON.stringify(rawParams));
     const parsed =
         typeof rawParams === 'string' ? JSON.parse(rawParams) : rawParams;
 

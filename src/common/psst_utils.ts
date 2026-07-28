@@ -5,11 +5,16 @@
 
 import {logger} from './logger';
 
+export interface ModalSelectorData {
+  selector: string,
+  event: string
+}
+
 export interface Task {
   uid: string;
   url: string;
   description: string;
-  modal_selectors: string[] | undefined;
+  modal_selectors: ModalSelectorData[] | undefined;
   selector: string;
   turn_off: boolean;
   error_description: string|undefined;
@@ -117,7 +122,44 @@ export async function waitForElement(
     // Timeout fallback
     setTimeout(() => {
       observer.disconnect();
-      reject(new Error(`Element ${selector} not found within ${timeout}ms`));
+      reject(new Error(`The element not found within timeout`));
+    }, timeout);
+  });
+}
+
+/**
+ * Waits for an element's attribute to reach an expected value.
+ * Uses MutationObserver for efficiency, falling back to a timeout if not reached.
+ *
+ * @param element - the element to observe
+ * @param attribute - attribute name to watch (e.g. 'aria-checked')
+ * @param expectedValue - the value to wait for
+ * @param timeout - Maximum time to wait in milliseconds (default: 2000)
+ * @throws Error if the attribute does not reach expectedValue within the timeout
+ */
+export async function waitForAttributeValue(
+  element: HTMLElement,
+  attribute: string,
+  expectedValue: string,
+  timeout: number = 2000
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (element.getAttribute(attribute) === expectedValue) {
+      return resolve();
+    }
+
+    const observer = new MutationObserver(() => {
+      if (element.getAttribute(attribute) === expectedValue) {
+        observer.disconnect();
+        resolve();
+      }
+    });
+
+    observer.observe(element, {attributes: true, attributeFilter: [attribute]});
+
+    setTimeout(() => {
+      observer.disconnect();
+      reject(new Error(`Attribute "${attribute}" did not become "${expectedValue}" within ${timeout}ms`));
     }, timeout);
   });
 }

@@ -31,19 +31,23 @@ export class ChatgptUserScript extends UserScriptBase {
     protected getSiteScriptData():
       Omit<UserScriptData, 'user_id'|'initial_execution'> {
         return {
-            share_experience_link: "https://x.com/intent/post?text=$1",
+            share_experience_link: "",
             site_name: 'chatgpt.com',
             tasks: [
             {
                 uid: '1',
                 url: 'https://chatgpt.com/',
-                description: 'Disable "Improve the model for everyone" so conversations are not used to train OpenAI models',
-                selector: '#radix-_r_av_ > div > div.pb-8 > div > div.flex.items-center.gap-1 > button > span',
+                description: 'Disable "Improve the model for everyone"',
+                selector: 'button[data-testid="improve-model-toggle"]',
                 modal_selectors: [
-                 '#radix-_R_5qlalpakoac97l35_ > div.flex.min-w-0.items-center.gap-2',
-                 '#radix-_R_nalan5aj19h4ukcmH1_ > div > div:nth-child(6)',
-                 '#radix-_r_as_-trigger-DataControls > div.flex.min-w-0.grow.items-center.gap-2\.5',
-                 '#radix-_r_as_-content-DataControls > section > div:nth-child(2) > div > button > div > div.text-token-text-secondary.flex.min-h-\[38px\].items-center.ps-3'
+                 /*Select main menu*/
+                 {selector: '[data-testid="accounts-profile-button"] > div.flex.min-w-0.items-center.gap-2', event: 'pointerdown'},
+                 /*Select Settings menu item*/
+                 {selector: '[data-testid="settings-menu-item"]', event: 'click'},
+                 /*Select Data controls tab*/
+                 {selector: "[data-testid='data-controls-tab'] > div.min-w-0 > div", event: 'mousedown'},
+                 /*Click on the improve the model button*/
+                 {selector: 'button[data-testid="improve-model-open-modal-button"] div.ps-3', event: 'click'},
                 ],
                 turn_off: true,
                 error_description: undefined

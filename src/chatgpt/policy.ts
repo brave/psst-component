@@ -6,76 +6,101 @@
 
 import { logger } from "../common/logger";
 import { PolicyScriptBase } from "../common/policy_base";
-import { waitForElement } from "../common/psst_utils";
+import { waitForAttributeValue, waitForElement, type ModalSelectorData } from "../common/psst_utils";
 
 
 export class ChatGptPolicyScript extends PolicyScriptBase {
-    async waitForSettingAppliedWithTimeout(selector: string | undefined, turnOff: boolean, modalSelectors: string[] | undefined): Promise<void> {
-        await this.clickModalSelectors(modalSelectors);
+    async waitForSettingAppliedWithTimeout(selector: string | undefined, turnOff: boolean, modalSelectors: ModalSelectorData[] | undefined): Promise<void> {
+        const errors = await this.clickModalSelectors(modalSelectors);
 
         return new Promise((resolve, reject) => {
-            let intervalId: number | null = null;
-            let attemptCount = 0;
+          let intervalId: number|null = null;
+          let attemptCount = 0;
 
-            const wrappedResolve = () => {
+          const wrappedResolve = () => {
             if (intervalId) clearInterval(intervalId);
             resolve();
-            };
+          };
 
-            const wrappedReject = (errorDescription: string|null = null) => {
-              attemptCount++;
-              if (attemptCount >=
-                  ChatGptPolicyScript.WAIT_FOR_PAGE_ATTEMPTS_COUNT) {
-                if (intervalId) clearInterval(intervalId);
-                reject(new Error(`Checkbox not found after ${
-                    ChatGptPolicyScript
-                        .WAIT_FOR_PAGE_ATTEMPTS_COUNT} attempts. Error: ${errorDescription}`));
-              }
-            };
+          const wrappedReject = (errorDescription: string|null = null) => {
+            attemptCount++;
+            if (attemptCount >=
+                ChatGptPolicyScript.WAIT_FOR_PAGE_ATTEMPTS_COUNT) {
+              if (intervalId) clearInterval(intervalId);
+              reject(new Error(`Checkbox not found after ${
+                  ChatGptPolicyScript
+                      .WAIT_FOR_PAGE_ATTEMPTS_COUNT} attempts. Error: ${
+                  errorDescription}`));
+            }
+          };
 
+          if (!errors) {
             intervalId = setInterval(() => {
-            this.checkCheckboxes(wrappedResolve, wrappedReject, selector, turnOff);
+              this.checkCheckboxes(
+                  wrappedResolve, wrappedReject, selector, turnOff);
             }, ChatGptPolicyScript.WAIT_FOR_PAGE_TIMEOUT);
+          } else {
+            reject(new Error(`Modal selectors error: ${errors.join('; ')}`));
+          }
         });
     }
 
-    private async clickModalSelectors(modalSelectors: string[] | undefined): Promise<void> {
+    private async clickModalSelectors(modalSelectors: ModalSelectorData[] | undefined): Promise<string[]|undefined> {
         if (!modalSelectors || modalSelectors.length === 0) {
             if (__DEV__) logger.error('No modal selectors provided');
-            return;
+            return undefined;
         }
 
+        const errors: string[] = [];
         for (let index = 0; index < modalSelectors.length; index++) {
             const modalSelector = modalSelectors[index]
+            if (__DEV__) logger.debug(`Run iteration: "${index + 1}/${modalSelectors.length}"`);
             if (modalSelector) {
-                const element = await waitForElement(modalSelector);
-                if (__DEV__) logger.debug(`Element: ${element !== null && element !== undefined} Clicked modal selector ${index + 1}/${modalSelectors.length}: "${modalSelector}"`);
-                element.click();
+                try {
+                    const element = await waitForElement(modalSelector.selector);
+                    element.dispatchEvent(new PointerEvent(modalSelector.event, {bubbles: true, cancelable: true, button: 0, pointerId: 1, pointerType: 'mouse', isPrimary: true}));
+                } catch (error) {
+                    const errorMessage = `${index + 1}/${modalSelectors.length}: ${(error as Error).message}`;
+                    if (__DEV__) logger.debug(errorMessage);
+                    errors.push(errorMessage);
+                }
             }
         }
+        return errors.length > 0 ? errors : undefined;
     }
 
-    private checkCheckboxes(resolve: () => void, reject: (errorDescription: string | null) => void, selector: string | undefined, turnOff: boolean) {
-        if (!selector) {
-            reject('No selector provided');
-            return;
-        }
-        const checkbox = document.querySelector(selector) as HTMLInputElement | null;
-        if (!checkbox || checkbox.type !== 'checkbox') {
-            reject('No checkbox found');
-            return;
-        }
+    private async checkCheckboxes(
+        resolve: () => void, reject: (errorDescription: string|null) => void,
+        selector: string|undefined, turnOff: boolean) {
+      if (!selector) {
+        reject('No selector provided');
+        return;
+      }
+      try {
+        const element = await waitForElement(selector);
 
-        if (turnOff) {
-            if (checkbox.checked) {
-                checkbox.click();
+        const click =
+            () => {
+              element.dispatchEvent(new PointerEvent('click', {
+                bubbles: true,
+                cancelable: true,
+                button: 0,
+                pointerId: 1,
+                pointerType: 'mouse',
+                isPrimary: true
+              }));
             }
-        } else {
-            if (!checkbox.checked) {
-                checkbox.click();
-            }
+
+        const target = turnOff ? 'false' : 'true';
+        const isChecked = element.getAttribute('aria-checked') === 'true';
+        if ((turnOff && isChecked) || (!turnOff && !isChecked)) {
+          click();
+          await waitForAttributeValue(element, 'aria-checked', target);
         }
         resolve();
+      } catch (error) {
+        reject((error as Error).message);
+      }
     }
 }
 

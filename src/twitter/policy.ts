@@ -5,10 +5,11 @@
 // You can obtain one at https://mozilla.org/MPL/2.0/
 
 import { PolicyScriptBase } from "../common/policy_base";
+import type { ModalSelectorData } from "../common/psst_utils";
 
 
 export class TwitterPolicyScript extends PolicyScriptBase {
-    waitForSettingAppliedWithTimeout(selector: string | undefined, turnOff: boolean, modalSelectors: string[] | undefined): Promise<void> {
+    waitForSettingAppliedWithTimeout(selector: string | undefined, turnOff: boolean, modalSelectors: ModalSelectorData[] | undefined): Promise<void> {
         return new Promise((resolve, reject) => {
             let intervalId: number | null = null;
             let attemptCount = 0;
