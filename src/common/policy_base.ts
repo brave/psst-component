@@ -23,7 +23,7 @@ export abstract class PolicyScriptBase {
     this.params = this.parseParams();
   }
 
-    abstract waitForSettingAppliedWithTimeout(selector: string | undefined, turn_off: boolean | undefined, modal_selectors: ModalSelectorData[] | undefined): Promise<void>;
+    abstract waitForSettingAppliedWithTimeout(selector: ModalSelectorData | undefined, turn_off: boolean | undefined, modal_selectors: ModalSelectorData[] | undefined): Promise<void>;
 
   async applyPolicies(): Promise<PolicyScriptResult> {
     if (__DEV__)

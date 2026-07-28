@@ -24,7 +24,7 @@ export class ChatgptUserScript extends UserScriptBase {
             if (__DEV__) logger.error(`User identifier element not found for selector ${USER_IDENTIFIER_SELECTOR}.`);
             return undefined;
         }
-        if (__DEV__) logger.info(`userElement.textContent:${userElement?.textContent ?? 'N/A'}`);
+        if (__DEV__) logger.debug(`userElement.textContent:${userElement?.textContent ?? 'N/A'}`);
         return userElement.textContent.trim() || undefined;
     }
 
@@ -38,7 +38,7 @@ export class ChatgptUserScript extends UserScriptBase {
                 uid: '1',
                 url: 'https://chatgpt.com/',
                 description: 'Disable "Improve the model for everyone"',
-                selector: 'button[data-testid="improve-model-toggle"]',
+                selector: {selector: 'button[data-testid="improve-model-toggle"]', event: 'click'},
                 modal_selectors: [
                  /*Select main menu*/
                  {selector: '[data-testid="accounts-profile-button"] > div.flex.min-w-0.items-center.gap-2', event: 'pointerdown'},

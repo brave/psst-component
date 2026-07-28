@@ -24,6 +24,10 @@ export abstract class UserScriptBase {
       const userId = this.getUserId();
       if (__DEV__) logger.info('Getting tasks for user ID:', userId);
 
+      if (!userId) {
+        return undefined;
+      }
+
       const userData: UserScriptData = {
         user_id: userId,
         initial_execution: isInitialExecution(),

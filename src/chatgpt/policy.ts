@@ -10,7 +10,7 @@ import { waitForAttributeValue, waitForElement, type ModalSelectorData } from ".
 
 
 export class ChatGptPolicyScript extends PolicyScriptBase {
-    async waitForSettingAppliedWithTimeout(selector: string | undefined, turnOff: boolean, modalSelectors: ModalSelectorData[] | undefined): Promise<void> {
+    async waitForSettingAppliedWithTimeout(selectorData: ModalSelectorData | undefined, turnOff: boolean, modalSelectors: ModalSelectorData[] | undefined): Promise<void> {
         const errors = await this.clickModalSelectors(modalSelectors);
 
         return new Promise((resolve, reject) => {
@@ -37,7 +37,7 @@ export class ChatGptPolicyScript extends PolicyScriptBase {
           if (!errors) {
             intervalId = setInterval(() => {
               this.checkCheckboxes(
-                  wrappedResolve, wrappedReject, selector, turnOff);
+                  wrappedResolve, wrappedReject, selectorData, turnOff);
             }, ChatGptPolicyScript.WAIT_FOR_PAGE_TIMEOUT);
           } else {
             reject(new Error(`Modal selectors error: ${errors.join('; ')}`));
@@ -71,13 +71,13 @@ export class ChatGptPolicyScript extends PolicyScriptBase {
 
     private async checkCheckboxes(
         resolve: () => void, reject: (errorDescription: string|null) => void,
-        selector: string|undefined, turnOff: boolean) {
-      if (!selector) {
+        selectorData: ModalSelectorData|undefined, turnOff: boolean) {
+      if (!selectorData) {
         reject('No selector provided');
         return;
       }
       try {
-        const element = await waitForElement(selector);
+        const element = await waitForElement(selectorData.selector);
 
         const click =
             () => {

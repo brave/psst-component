@@ -15,7 +15,7 @@ export interface Task {
   url: string;
   description: string;
   modal_selectors: ModalSelectorData[] | undefined;
-  selector: string;
+  selector: ModalSelectorData;
   turn_off: boolean;
   error_description: string|undefined;
 }
