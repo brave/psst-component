@@ -26,7 +26,7 @@ import {UserScriptBase} from '../common/user_base';
 const TWID_COOKIE_NAME = 'twid';
 
 export class TwitterUserScript extends UserScriptBase {
-  readonly version = 5;
+  readonly version = 6;
   readonly includeUrlPatterns: string[] = ['https://x.com/*'];
   readonly excludeUrlPatterns: string[] = [];
   readonly userScript: string = 'user.js';
@@ -55,7 +55,7 @@ export class TwitterUserScript extends UserScriptBase {
           url: 'https://x.com/settings/location',
           description: 'Disable attaching location information to posts',
           selector:
-              {selector: '#react-root > div > div > div.css-175oi2r.r-1f2l425.r-13qz1uu.r-417010.r-18u37iz > main > div > div > div > section:nth-child(2) > div.css-175oi2r.r-qocrb3.r-14lw9ot.r-1h0z5md.r-1jx8gzb.r-f8sm7e.r-13qz1uu.r-1ye8kvj > div > div.css-175oi2r.r-w7s2jr.r-14lw9ot.r-3pj75a > div > label > div > div.css-175oi2r.r-lrvibr > input', event: 'click'},
+              {selector: 'input[type="checkbox"][aria-describedby="CHECKBOX_1_LABEL"]', event: 'click'},
           modal_selectors: undefined,
           turn_off: true,
           error_description: undefined
@@ -66,7 +66,7 @@ export class TwitterUserScript extends UserScriptBase {
           description:
               'Disable sharing additional information with X’s business partners.',
           selector:
-              {selector: '#react-root > div > div > div.css-175oi2r.r-1f2l425.r-13qz1uu.r-417010.r-18u37iz > main > div > div > div > section:nth-child(2) > div.css-175oi2r.r-qocrb3.r-14lw9ot.r-1h0z5md.r-1jx8gzb.r-f8sm7e.r-13qz1uu.r-1ye8kvj > div.css-175oi2r.r-w7s2jr.r-14lw9ot.r-3pj75a > div > div > label > div > div.css-175oi2r.r-lrvibr > input', event: 'click'},
+              {selector: 'input[type="checkbox"][aria-describedby="CHECKBOX_1_LABEL"]', event: 'click'},
           modal_selectors: undefined,
           turn_off: true,
           error_description: undefined
@@ -77,7 +77,7 @@ export class TwitterUserScript extends UserScriptBase {
           description:
               'Disable personalization based on your inferred identity',
           selector:
-              {selector: '#react-root > div > div > div.css-175oi2r.r-1f2l425.r-13qz1uu.r-417010.r-18u37iz > main > div > div > div > section:nth-child(2) > div.css-175oi2r.r-qocrb3.r-14lw9ot.r-1h0z5md.r-1jx8gzb.r-f8sm7e.r-13qz1uu.r-1ye8kvj > div.css-175oi2r.r-w7s2jr.r-14lw9ot.r-3pj75a > div > div > label > div > div.css-175oi2r.r-lrvibr > input', event: 'click'},
+              {selector: 'input[type="checkbox"][aria-describedby="CHECKBOX_1_LABEL"]', event: 'click'},
           modal_selectors: undefined,
           turn_off: true,
           error_description: undefined
@@ -87,7 +87,7 @@ export class TwitterUserScript extends UserScriptBase {
           url: 'https://x.com/settings/ads_preferences',
           description: 'Disable personalized ads',
           selector:
-              {selector: '#react-root > div > div > div.css-175oi2r.r-1f2l425.r-13qz1uu.r-417010.r-18u37iz > main > div > div > div > section:nth-child(2) > div.css-175oi2r.r-qocrb3.r-14lw9ot.r-1h0z5md.r-1jx8gzb.r-f8sm7e.r-13qz1uu.r-1ye8kvj > div.css-175oi2r.r-w7s2jr.r-14lw9ot.r-3pj75a > div > div > label > div > div.css-175oi2r.r-lrvibr > input', event: 'click'},
+              {selector: 'input[type="checkbox"][aria-describedby="CHECKBOX_1_LABEL"]', event: 'click'},
           modal_selectors: undefined,
           turn_off: true,
           error_description: undefined

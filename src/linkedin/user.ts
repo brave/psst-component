@@ -30,7 +30,7 @@ function deleteCookie(name: string): void {
 }
 
 export class LinkedinUserScript extends UserScriptBase {
-  readonly version = 1;
+  readonly version = 2;
   readonly includeUrlPatterns: string[] = ['https://www.linkedin.com/*'];
   readonly excludeUrlPatterns: string[] = [];
   readonly userScript: string = 'user.js';
@@ -92,9 +92,9 @@ export class LinkedinUserScript extends UserScriptBase {
       tasks: [
         {
           uid: '1',
-          url: 'https://www.linkedin.com/mypreferences/d/member-cookies',
-          description: 'Disable all non-essential cookies',
-          selector: {selector: 'input[role="switch"]#nonEssentialCookieConsent', event: 'click'},
+          url: 'https://www.linkedin.com/mypreferences/d/settings/data-for-ai-improvement',
+          description: 'Disable using data for Generative AI Improvement',
+          selector: {selector: 'input[role="switch"][aria-labelledby="allowDataForGenerativeAI"]', event: 'click'},
           modal_selectors: undefined,
           turn_off: true,
           error_description: undefined
@@ -111,6 +111,89 @@ export class LinkedinUserScript extends UserScriptBase {
         },
         {
           uid: '3',
+          url: 'https://www.linkedin.com/mypreferences/d/settings/linkedin-promotions',
+          description:
+              'Disable marketing promotions',
+          selector: {selector: 'input[role="switch"][aria-labelledby="allowProfileAndActivityDataForMarketingAds"]', event: 'click'},
+          modal_selectors: undefined,
+          turn_off: true,
+          error_description: undefined
+        },
+        {
+          uid: '4',
+          url: 'https://www.linkedin.com/mypreferences/d/settings/linkedin-promotions',
+          description:
+              'Disable marketing emails',
+          selector: {selector: 'input[role="switch"][aria-labelledby="tipsForUsingLinkedinViaEmail"]', event: 'click'},
+          modal_selectors: undefined,
+          turn_off: true,
+          error_description: undefined
+        },
+        {
+          uid: '5',
+          url: 'https://www.linkedin.com/mypreferences/d/settings/share-data-with-select-partners',
+          description: 'Disable data sharing with affiliates and partners',
+          selector: {selector: 'input[role="switch"][aria-labelledby="shareDataWithTrustedPartners"]', event: 'click'},
+          modal_selectors: undefined,
+          turn_off: true,
+          error_description: undefined
+        },
+        {
+          uid: '6',
+          url: 'https://www.linkedin.com/mypreferences/d/settings/ads-by-age',
+          description: 'Disable personalizing ads based on age range',
+          selector: {selector: 'input[role="switch"][aria-labelledby="allowAdsByAge"]', event: 'click'},
+          modal_selectors: undefined,
+          turn_off: true,
+          error_description: undefined
+        },
+        {
+          uid: '7',
+          url: 'https://www.linkedin.com/mypreferences/d/settings/ads-by-gender',
+          description: 'Disable personalizing ads based on inferred gender',
+          selector: {selector: 'input[role="switch"][aria-labelledby="allowAdsByGender"]', event: 'click'},
+          modal_selectors: undefined,
+          turn_off: true,
+          error_description: undefined
+        },
+        {
+          uid: '8',
+          url: 'https://www.linkedin.com/mypreferences/d/settings/ads-beyond-linkedin',
+          description: 'Disable personalized ads off of LinkedIn',
+          selector: {selector: 'input[role="switch"][aria-labelledby="allowLinkedInAudienceNetwork"]', event: 'click'},
+          modal_selectors: undefined,
+          turn_off: true,
+          error_description: undefined
+        },
+        {
+          uid: '9',
+          url: 'https://www.linkedin.com/mypreferences/d/settings/ads-interactions-with-business',
+          description: 'Disable personalized ads based on data given to businesses',
+          selector: {selector: 'input[role="switch"][aria-labelledby="allowUseOfThirdPartyData"]', event: 'click'},
+          modal_selectors: undefined,
+          turn_off: true,
+          error_description: undefined
+        },
+        {
+          uid: '10',
+          url: 'https://www.linkedin.com/mypreferences/d/settings/ads-related-actions',
+          description: 'Disable using your data for ad insights',
+          selector: {selector: 'input[role="switch"][aria-labelledby="allowConversionTrackings"]', event: 'click'},
+          modal_selectors: undefined,
+          turn_off: true,
+          error_description: undefined
+        },
+        {
+          uid: '11',
+          url: 'https://www.linkedin.com/mypreferences/d/member-cookies',
+          description: 'Disable all non-essential cookies',
+          selector: {selector: 'input[role="switch"]#nonEssentialCookieConsent', event: 'click'},
+          modal_selectors: undefined,
+          turn_off: true,
+          error_description: undefined
+        },
+        {
+          uid: '12',
           url: 'https://www.linkedin.com/mypreferences/d/settings/ads-inferred-location',
           description:
               'Disable personalizing ads based on inferred city location',
@@ -120,55 +203,10 @@ export class LinkedinUserScript extends UserScriptBase {
           error_description: undefined
         },
         {
-          uid: '4',
+          uid: '13',
           url: 'https://www.linkedin.com/mypreferences/d/interest-categories',
           description: 'Disable personalizing ads based on inferred interests and traits',
           selector: {selector: 'input[role="switch"][aria-labelledby="adsPrivacyAllowInterestsAndBehaviors"]', event: 'click'},
-          modal_selectors: undefined,
-          turn_off: true,
-          error_description: undefined
-        },
-        {
-          uid: '5',
-          url: 'https://www.linkedin.com/mypreferences/d/settings/ads-by-age',
-          description: 'Disable personalizing ads based on age range',
-          selector: {selector: 'input[role="switch"][aria-labelledby="allowAdsByAge"]', event: 'click'},
-          modal_selectors: undefined,
-          turn_off: true,
-          error_description: undefined
-        },
-        {
-          uid: '6',
-          url: 'https://www.linkedin.com/mypreferences/d/settings/ads-by-gender',
-          description: 'Disable personalizing ads based on inferred gender',
-          selector: {selector: 'input[role="switch"][aria-labelledby="allowAdsByGender"]', event: 'click'},
-          modal_selectors: undefined,
-          turn_off: true,
-          error_description: undefined
-        },
-        {
-          uid: '7',
-          url: 'https://www.linkedin.com/mypreferences/d/settings/ads-beyond-linkedin',
-          description: 'Disable personalized ads off of LinkedIn',
-          selector: {selector: 'input[role="switch"][aria-labelledby="allowLinkedInAudienceNetwork"]', event: 'click'},
-          modal_selectors: undefined,
-          turn_off: true,
-          error_description: undefined
-        },
-        {
-          uid: '8',
-          url: 'https://www.linkedin.com/mypreferences/d/settings/ads-interactions-with-business',
-          description: 'Disable personalized ads based on data given to businesses',
-          selector: {selector: 'input[role="switch"][aria-labelledby="allowUseOfThirdPartyData"]', event: 'click'},
-          modal_selectors: undefined,
-          turn_off: true,
-          error_description: undefined
-        },
-        {
-          uid: '9',
-          url: 'https://www.linkedin.com/mypreferences/d/settings/ads-related-actions',
-          description: 'Disable using your data for ad insights',
-          selector: {selector: 'input[role="switch"][aria-labelledby="allowConversionTrackings"]', event: 'click'},
           modal_selectors: undefined,
           turn_off: true,
           error_description: undefined
