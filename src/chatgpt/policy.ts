@@ -47,7 +47,7 @@ export class ChatGptPolicyScript extends PolicyScriptBase {
 
     private async clickModalSelectors(modalSelectors: ModalSelectorData[] | undefined): Promise<string[]|undefined> {
         if (!modalSelectors || modalSelectors.length === 0) {
-            if (__DEV__) logger.error('No modal selectors provided');
+            if (__DEV__) logger.debug('No modal selectors provided');
             return undefined;
         }
 

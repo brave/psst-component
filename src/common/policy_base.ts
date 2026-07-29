@@ -5,7 +5,7 @@
 
 import type {PolicyScriptInputData} from './declarations';
 import {logger} from './logger';
-import {calculateProgress, type ModalSelectorData, moveCurrentTask, PSST_LOCALSTORAGE_KEY, type PsstData, PsstState, type Task} from './psst_utils';
+import {calculateProgress, type ModalSelectorData, moveCurrentTask, normalizeModalSelector, PSST_LOCALSTORAGE_KEY, type PsstData, PsstState, type Task} from './psst_utils';
 
 
 export interface PolicyScriptResult {
@@ -23,7 +23,7 @@ export abstract class PolicyScriptBase {
     this.params = this.parseParams();
   }
 
-    abstract waitForSettingAppliedWithTimeout(selector: ModalSelectorData | undefined, turn_off: boolean | undefined, modal_selectors: ModalSelectorData[] | undefined): Promise<void>;
+    abstract waitForSettingAppliedWithTimeout(selector: ModalSelectorData | undefined, turn_off: boolean, modal_selectors: ModalSelectorData[] | undefined): Promise<void>;
 
   async applyPolicies(): Promise<PolicyScriptResult> {
     if (__DEV__)
@@ -51,17 +51,21 @@ export abstract class PolicyScriptBase {
     if (psstObj.state === PsstState.COMPLETED) {
       return {next_url: undefined, psst: psstObj};
     }
-if (__DEV__) logger.debug('applyPolicies before wait #100');
+
     try {
       const current_task = psstObj.current_task;
+      const selector = normalizeModalSelector(
+          current_task?.selector as ModalSelectorData | string | undefined);
+      const modal_selectors = current_task?.modal_selectors?.map(
+          modalSelector => normalizeModalSelector(
+              modalSelector as ModalSelectorData | string | undefined) as
+              ModalSelectorData);
       await this.waitForSettingAppliedWithTimeout(
-          current_task?.selector, current_task?.turn_off,
-          current_task?.modal_selectors);
-      moveCurrentTask(psstObj, undefined)
+          selector, current_task?.turn_off ?? false, modal_selectors);
+      moveCurrentTask(psstObj, undefined);
     } catch (error) {
       moveCurrentTask(psstObj, (error as Error).message);
     }
-if (__DEV__) logger.debug('applyPolicies after wait #200');
 
     const next_task = psstObj.tasks_list[0] || null;
     const hasMoreTasks = next_task !== null;

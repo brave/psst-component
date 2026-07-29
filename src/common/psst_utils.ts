@@ -58,6 +58,21 @@ export const isInitialExecution =
       }
     }
 
+/**
+ * Converts a legacy string selector (from a Task persisted before selectors
+ * became `{selector, event}` objects) into the current ModalSelectorData
+ * shape, so older in-progress runs stored in localStorage don't crash when
+ * policy scripts access `.selector`/`.event`.
+ */
+export const normalizeModalSelector =
+    (selector: ModalSelectorData|string|undefined): ModalSelectorData|
+    undefined => {
+      if (typeof selector === 'string') {
+        return {selector, event: 'click'};
+      }
+      return selector;
+    };
+
 export const moveCurrentTask =
     (psstObj: PsstData|undefined, errorMessage: string|undefined) => {
       if (!psstObj?.current_task) {
@@ -71,7 +86,7 @@ export const moveCurrentTask =
         selector: psstObj.current_task.selector,
         turn_off: psstObj.current_task.turn_off,
         modal_selectors: psstObj.current_task.modal_selectors,
-    error_description: errorMessage
+        error_description: errorMessage
       };
 
       psstObj.applied_tasks.push(completedTask);
@@ -163,20 +178,6 @@ export async function waitForAttributeValue(
     }, timeout);
   });
 }
-
-// Usage Example
-// (async () => {
-//   try {
-//     const modalBtn = await waitForElement('#modal-trigger');
-//     // Ensure the element is an HTMLElement before clicking
-//     if (modalBtn instanceof HTMLElement) {
-//       modalBtn.click();
-//       console.log('Modal triggered successfully.');
-//     }
-//   } catch (error) {
-//     console.error('Failed to find modal trigger:', error);
-//   }
-// })();
 
 export const calculateProgress = (psstObj: PsstData | undefined) => {
   const processed = Number(getProcessedTasks(psstObj)) || 0;
