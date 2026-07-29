@@ -44,19 +44,16 @@ export class LinkedinUserScript extends UserScriptBase {
               .some(key => key.startsWith(SIGNED_USER_LS_KEY_NAME))
 
       if (!isUserSignedIn()) {
-        if (__DEV__) logger.debug(`[tmp] [getUserId] No cookie`);
         deleteCookie(CACHE_COOKIE_NAME);
         return undefined;
       }
 
       const cachedUid = this.readCachedUid();
       if (cachedUid) {
-        if (__DEV__) logger.debug(`[tmp] [getUserId] No cache id`);
         return cachedUid;
       }
 
       const profileLink = document.querySelector('a[href*="/in/"]');
-      if (__DEV__) logger.debug(`[tmp] [getUserId] profileLink:${profileLink}`);
       if (profileLink && profileLink instanceof HTMLAnchorElement) {
         const match = profileLink.href.match(/\/in\/([a-zA-Z0-9-]+)/);
         if (match && match[1]) {
