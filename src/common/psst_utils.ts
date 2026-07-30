@@ -5,11 +5,17 @@
 
 import {logger} from './logger';
 
+export interface ModalSelectorData {
+  selector: string,
+  event: string
+}
+
 export interface Task {
   uid: string;
   url: string;
   description: string;
-  selector: string;
+  modal_selectors: ModalSelectorData[] | undefined;
+  selector: ModalSelectorData;
   turn_off: boolean;
   error_description: string|undefined;
 }
@@ -52,6 +58,21 @@ export const isInitialExecution =
       }
     }
 
+/**
+ * Converts a legacy string selector (from a Task persisted before selectors
+ * became `{selector, event}` objects) into the current ModalSelectorData
+ * shape, so older in-progress runs stored in localStorage don't crash when
+ * policy scripts access `.selector`/`.event`.
+ */
+export const normalizeModalSelector =
+    (selector: ModalSelectorData|string|undefined): ModalSelectorData|
+    undefined => {
+      if (typeof selector === 'string') {
+        return {selector, event: 'click'};
+      }
+      return selector;
+    };
+
 export const moveCurrentTask =
     (psstObj: PsstData|undefined, errorMessage: string|undefined) => {
       if (!psstObj?.current_task) {
@@ -64,6 +85,7 @@ export const moveCurrentTask =
         description: psstObj.current_task.description,
         selector: psstObj.current_task.selector,
         turn_off: psstObj.current_task.turn_off,
+        modal_selectors: psstObj.current_task.modal_selectors,
         error_description: errorMessage
       };
 
@@ -78,7 +100,86 @@ const getProcessedTasks = (psst: PsstData|undefined) => {
   return psst?.applied_tasks?.length ?? 0;
 };
 
-export const calculateProgress = (psstObj: PsstData|undefined) => {
+/**
+ * Waits for an element matching the selector to appear in the DOM.
+ * Uses MutationObserver for efficiency, falling back to a timeout if not found.
+ *
+ * @param selector - CSS selector string (e.g., '#modal-trigger')
+ * @param timeout - Maximum time to wait in milliseconds (default: 5000)
+ * @returns Promise resolving to the found HTMLElement
+ * @throws Error if the element is not found within the timeout
+ */
+export async function waitForElement(
+  selector: string,
+  timeout: number = 5000
+): Promise<HTMLElement> {
+  return new Promise((resolve, reject) => {
+    // Check immediately
+    const element = document.querySelector<HTMLElement>(selector);
+    if (element) {
+      return resolve(element);
+    }
+
+    // If not found, set up an observer
+    const observer = new MutationObserver((mutations, obs) => {
+      const el = document.querySelector<HTMLElement>(selector);
+      if (el) {
+        obs.disconnect();
+        resolve(el);
+      }
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+
+    // Timeout fallback
+    setTimeout(() => {
+      observer.disconnect();
+      reject(new Error(`The element not found within timeout`));
+    }, timeout);
+  });
+}
+
+/**
+ * Waits for an element's attribute to reach an expected value.
+ * Uses MutationObserver for efficiency, falling back to a timeout if not reached.
+ *
+ * @param element - the element to observe
+ * @param attribute - attribute name to watch (e.g. 'aria-checked')
+ * @param expectedValue - the value to wait for
+ * @param timeout - Maximum time to wait in milliseconds (default: 2000)
+ * @throws Error if the attribute does not reach expectedValue within the timeout
+ */
+export async function waitForAttributeValue(
+  element: HTMLElement,
+  attribute: string,
+  expectedValue: string,
+  timeout: number = 2000
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (element.getAttribute(attribute) === expectedValue) {
+      return resolve();
+    }
+
+    const observer = new MutationObserver(() => {
+      if (element.getAttribute(attribute) === expectedValue) {
+        observer.disconnect();
+        resolve();
+      }
+    });
+
+    observer.observe(element, {attributes: true, attributeFilter: [attribute]});
+
+    setTimeout(() => {
+      observer.disconnect();
+      reject(new Error(`Attribute "${attribute}" did not become "${expectedValue}" within ${timeout}ms`));
+    }, timeout);
+  });
+}
+
+export const calculateProgress = (psstObj: PsstData | undefined) => {
   const processed = Number(getProcessedTasks(psstObj)) || 0;
   const available = Number(getAvailableTasks(psstObj)) || 0;
   const total = processed + available;

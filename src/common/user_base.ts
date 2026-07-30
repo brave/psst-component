@@ -24,6 +24,11 @@ export abstract class UserScriptBase {
       const userId = this.getUserId();
       if (__DEV__) logger.info('Getting tasks for user ID:', userId);
 
+      if (!userId) {
+        if (__DEV__) logger.debug('Do not continue with tasks as no signed in user');
+        return undefined;
+      }
+
       const userData: UserScriptData = {
         user_id: userId,
         initial_execution: isInitialExecution(),

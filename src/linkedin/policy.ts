@@ -8,7 +8,7 @@ import { PolicyScriptBase } from "../common/policy_base";
 import type { ModalSelectorData } from "../common/psst_utils";
 
 
-export class TwitterPolicyScript extends PolicyScriptBase {
+export class LinkedInPolicyScript extends PolicyScriptBase {
     waitForSettingAppliedWithTimeout(selectorData: ModalSelectorData | undefined, turnOff: boolean, modalSelectors: ModalSelectorData[] | undefined): Promise<void> {
         return new Promise((resolve, reject) => {
             let intervalId: number | null = null;
@@ -22,17 +22,17 @@ export class TwitterPolicyScript extends PolicyScriptBase {
             const wrappedReject = (errorDescription: string|null = null) => {
               attemptCount++;
               if (attemptCount >=
-                  TwitterPolicyScript.WAIT_FOR_PAGE_ATTEMPTS_COUNT) {
+                  LinkedInPolicyScript.WAIT_FOR_PAGE_ATTEMPTS_COUNT) {
                 if (intervalId) clearInterval(intervalId);
                 reject(new Error(`Checkbox not found after ${
-                    TwitterPolicyScript
+                    LinkedInPolicyScript
                         .WAIT_FOR_PAGE_ATTEMPTS_COUNT} attempts. Error: ${errorDescription}`));
               }
             };
 
             intervalId = setInterval(() => {
             this.checkCheckboxes(wrappedResolve, wrappedReject, selectorData, turnOff);
-            }, TwitterPolicyScript.WAIT_FOR_PAGE_TIMEOUT);
+            }, LinkedInPolicyScript.WAIT_FOR_PAGE_TIMEOUT);
         });
     }
 
@@ -60,7 +60,7 @@ export class TwitterPolicyScript extends PolicyScriptBase {
     }
 }
 
-window.PolicyScriptInstance = new TwitterPolicyScript();
+window.PolicyScriptInstance = new LinkedInPolicyScript();
 
 // See user.ts / webpack.config.js: the bundle's value is exposed through a
 // default export, not a trailing IIFE (webpack's wrappers swallow `return`).

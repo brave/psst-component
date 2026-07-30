@@ -17,17 +17,18 @@ import * as path from 'path';
 // Browser-global shims
 //
 // Each website's user.ts is authored for the browser bundle: at module load it
-// runs `window.UserScriptInstance = new ...UserScript()` and reads
-// `document.cookie`, and it references `__DEV__` (injected by webpack's
-// DefinePlugin). Requiring the source under Node would otherwise throw on these
-// undefined globals before we can read the class metadata, so stub them out.
-// These must be set BEFORE any user.ts is required.
+// runs `window.UserScriptInstance = new ...UserScript()` and calls
+// `getTasks()`, which reads DOM globals like `document.cookie` or
+// `document.querySelector`, and it references `__DEV__` (injected by
+// webpack's DefinePlugin). Requiring the source under Node would otherwise
+// throw on these undefined globals before we can read the class metadata, so
+// stub them out. These must be set BEFORE any user.ts is required.
 // ---------------------------------------------------------------------------
 
 const g = globalThis as Record<string, unknown>;
 g.__DEV__ = false;
 g.window = g.window ?? g;
-g.document = g.document ?? { cookie: '' };
+g.document = g.document ?? { cookie: '', querySelector: () => null };
 
 // ---------------------------------------------------------------------------
 // Resolve paths — use __dirname directly (CommonJS, no import.meta.url needed)
