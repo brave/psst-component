@@ -12,8 +12,9 @@
     "test": "vitest run"
   },
   "type": "commonjs",
-  "overrides": { 
-    "ajv": "8.15.0"
+  "overrides": {
+    "ajv": ">=8.18.0",
+    "fast-uri": "2.4.3"
   },
   "devDependencies": {
     "@types/node": "25.6.0",
