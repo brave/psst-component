@@ -62,7 +62,7 @@ const PLUGIN_NAME = 'WrapPsstResultInClosurePlugin';
 // failure, and the injector would see an uncaught exception instead of a
 // defined completion value. `return undefined` avoids both.
 const RENDER_STARTUP_MARKER = '/* psst-closure-return */';
-const ASSIGNMENT_LINE_PATTERN = /^window\.psstResult = ([^\n]+);$/m;
+const ASSIGNMENT_LINE_PATTERN = /^window(?:\.psstResult|\["psstResult"\]) = ([^\n]+);$/m;
 
 // Matches the `iife: true` bootstrap wrapper's opening two lines: the
 // `(() => { // webpackBootstrap` (or `(function() {` fallback, used when the
@@ -97,8 +97,14 @@ class WrapPsstResultInClosurePlugin {
         { name: PLUGIN_NAME, stage: 10 },
         (source) => {
           const text = source.source().toString();
-          if (!ASSIGNMENT_LINE_PATTERN.test(text)) {
+          if (!text.includes('psstResult')) {
             return source;
+          }
+          if (!ASSIGNMENT_LINE_PATTERN.test(text)) {
+             throw new Error(
+               `${PLUGIN_NAME}: couldn't find the expected psstResult assignment in renderStartup output -- ` +
+                 'webpack\'s generated boilerplate may have changed.'
+             );
           }
           const rewritten = text.replace(
             ASSIGNMENT_LINE_PATTERN,
