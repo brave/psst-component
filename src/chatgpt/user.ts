@@ -79,6 +79,8 @@ export class ChatgptUserScript extends UserScriptBase {
                  /*Click on the improve the model button*/
                  {selector: 'button[data-testid="improve-model-open-modal-button"] div.ps-3', event: 'click'},
                 ],
+                available_for_countries: undefined,
+                unavailable_for_countries: undefined,
                 turn_off: true,
                 error_description: undefined
             }

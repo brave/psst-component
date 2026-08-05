@@ -57,6 +57,8 @@ export class TwitterUserScript extends UserScriptBase {
           selector:
               {selector: 'input[type="checkbox"][aria-describedby="CHECKBOX_1_LABEL"]', event: 'click'},
           modal_selectors: undefined,
+          available_for_countries: undefined,
+          unavailable_for_countries: undefined,
           turn_off: true,
           error_description: undefined
         },
@@ -68,6 +70,8 @@ export class TwitterUserScript extends UserScriptBase {
           selector:
               {selector: 'input[type="checkbox"][aria-describedby="CHECKBOX_1_LABEL"]', event: 'click'},
           modal_selectors: undefined,
+          available_for_countries: undefined,
+          unavailable_for_countries: undefined,
           turn_off: true,
           error_description: undefined
         },
@@ -79,6 +83,8 @@ export class TwitterUserScript extends UserScriptBase {
           selector:
               {selector: 'input[type="checkbox"][aria-describedby="CHECKBOX_1_LABEL"]', event: 'click'},
           modal_selectors: undefined,
+          available_for_countries: undefined,
+          unavailable_for_countries: undefined,
           turn_off: true,
           error_description: undefined
         },
@@ -89,6 +95,8 @@ export class TwitterUserScript extends UserScriptBase {
           selector:
               {selector: 'input[type="checkbox"][aria-describedby="CHECKBOX_1_LABEL"]', event: 'click'},
           modal_selectors: undefined,
+          available_for_countries: undefined,
+          unavailable_for_countries: undefined,
           turn_off: true,
           error_description: undefined
         }

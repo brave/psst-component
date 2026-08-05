@@ -15,6 +15,10 @@ export interface UserScriptData {
   tasks: Task[];
 }
 
+export interface UserScriptInputData {
+    countryId: string|undefined;
+}
+
 export interface PolicyScriptInputData extends UserScriptData {
     initial_execution: boolean;
 }
@@ -26,7 +30,7 @@ declare global {
 
     // The host prepends `const params = {...}` to the top of the bundle, making
     // it a lexical global reachable by every module via the scope chain.
-    const params: string | PolicyScriptInputData | undefined;
+    const params: string | PolicyScriptInputData | UserScriptInputData | undefined;
 
     interface Window {
         UserScriptInstance: UserScriptBase;

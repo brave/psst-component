@@ -3,9 +3,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // You can obtain one at https://mozilla.org/MPL/2.0/
 
-import type {UserScriptData} from './declarations';
+import type {UserScriptData, UserScriptInputData} from './declarations';
 import {logger} from './logger';
-import {isInitialExecution} from './psst_utils';
+import {isInitialExecution, isTaskAvailableForCountry} from './psst_utils';
 
 export abstract class UserScriptBase {
   abstract readonly version: number;
@@ -13,6 +13,12 @@ export abstract class UserScriptBase {
   abstract readonly excludeUrlPatterns: string[];
   abstract readonly userScript: string;
   abstract readonly policyScript: string;
+
+  protected params: UserScriptInputData;
+
+  constructor() {
+    this.params = this.parseParams();
+  }
 
   abstract getUserId(): string|undefined;
 
@@ -34,6 +40,11 @@ export abstract class UserScriptBase {
         initial_execution: isInitialExecution(),
         ...this.getSiteScriptData()
       };
+
+      const countryId = this.getParams().countryId;
+      userData.tasks = userData.tasks.filter(
+          task => isTaskAvailableForCountry(task, countryId));
+
       if (__DEV__)
         logger.info('Constructed UserScriptData:', JSON.stringify(userData));
       return userData;
@@ -41,5 +52,29 @@ export abstract class UserScriptBase {
       if (__DEV__) logger.error('Failed to construct UserScriptData:', error);
       return undefined;
     }
+  }
+
+  protected getParams(): UserScriptInputData {
+    return this.params;
+  }
+
+  private parseParams(): UserScriptInputData {
+    // The host injects `params` as a lexical global (see user.js, which
+    // reads `params.countryId` directly). It is NOT a property of
+    // window/globalThis, so we must reference the bare identifier and resolve
+    // it via the scope chain. Guard with `typeof` so a missing binding yields a
+    // fallback instead of a ReferenceError.
+    const rawParams = (typeof params !== 'undefined' && params) ||
+        (typeof window !== 'undefined' && (window as any).params) ||
+        (typeof globalThis !== 'undefined' && (globalThis as any).params) ||
+        '{}';
+    if (__DEV__)
+      logger.info('Parsing UserScriptInputData from params:', JSON.stringify(rawParams));
+    const parsed =
+        typeof rawParams === 'string' ? JSON.parse(rawParams) : rawParams;
+
+    return {
+      countryId: parsed.countryId
+    } as UserScriptInputData;
   }
 }
