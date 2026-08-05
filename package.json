@@ -12,6 +12,14 @@
     "test": "vitest run"
   },
   "type": "commonjs",
+  "overrides": {
+    "ajv": ">=8.18.0",
+    "fast-uri": "3.1.5",
+    "baseline-browser-mapping": "2.11.11",
+    "electron-to-chromium": "1.5.399",
+    "nanoid": "3.3.16",
+    "node-releases": "2.0.51"
+  },
   "devDependencies": {
     "@types/node": "25.6.0",
     "jsdom": "29.1.1",
@@ -22,6 +30,7 @@
     "vite": "8.0.16",
     "vitest": "4.1.8",
     "webpack": "5.106.2",
-    "webpack-cli": "7.0.2"
+    "webpack-cli": "7.0.2",
+    "webpack-sources": "3.5.0"
   }
 }

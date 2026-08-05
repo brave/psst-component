@@ -1,6 +1,9 @@
 const path = require('path');
 const fs = require('fs');
 const webpack = require('webpack');
+const {
+  WrapPsstResultInClosurePlugin,
+} = require('./scripts/webpack/wrap-psst-result-plugin');
 
 const SRC_DIR = path.resolve(__dirname, 'src');
 
@@ -42,14 +45,18 @@ function makeSharedConfig(mode) {
       minimize: isProduction,
       // Keep each module inside its own function wrapper. Production mode would
       // otherwise enable scope hoisting (ModuleConcatenationPlugin), which lifts
-      // every module's `const`/`class` (e.g. `noop`, `PolicyScriptBase`) into
-      // the top-level scope. Because we emit with `iife: false`, those become
-      // bare top-level lexical declarations in the injected script. The target
+      // every module's `const`/`class` (e.g. `noop`, `PolicyScriptBase`) into a
+      // shared enclosing scope. This was added back when the bundle had no
+      // outer wrapper (`iife: false`): those lifted declarations ended up
+      // directly at the top level of the injected script, and since the target
       // pages are SPAs (x.com) where Brave re-injects the same script into the
-      // *same* realm across in-app navigations — a second injection then throws
-      // `Identifier 'noop' has already been declared`. Disabling concatenation
-      // keeps those declarations function-scoped (like the dev build), leaving
-      // only a redeclarable `var __webpack_modules__` at the top level.
+      // *same* realm across in-app navigations, a second injection then threw
+      // `Identifier 'noop' has already been declared`.
+      //
+      // Now that `iife: true` (see `output` below) wraps the whole bundle in a
+      // closure, every injection gets a fresh function scope, so this may no
+      // longer be necessary. Leaving it disabled for now since re-enabling it
+      // is a separate, independently testable change.
       concatenateModules: false,
     },
     plugins: [
@@ -59,6 +66,11 @@ function makeSharedConfig(mode) {
       new webpack.DefinePlugin({
         __DEV__: JSON.stringify(!isProduction),
       }),
+      // Rewrites the bundle's trailing `window.psstResult = <expr>;` into a
+      // `return`, so it keeps working as the script's completion value once
+      // `output.iife: true` wraps the whole bundle in a closure. See
+      // scripts/webpack/wrap-psst-result-plugin.js for the full rationale.
+      new WrapPsstResultInClosurePlugin(),
     ],
   };
 }
@@ -108,18 +120,18 @@ module.exports = (env, argv) => {
         filename: '[name].js',
         path: path.resolve(__dirname, 'out', 'scripts', `${website}`),
         // These scripts are injected and read by their *completion value* (the
-        // value of the last evaluated expression). A trailing IIFE in the
-        // source can't provide that: webpack wraps each entry in its own
-        // function wrappers that don't propagate `return`. Instead, each entry
-        // surfaces its result via `export default`, and we tell webpack to emit
-        // that export as the final top-level expression statement:
-        //
-        //   window["psstResult"] = (function () { ...; return <default>; })();
-        //
-        // An assignment expression's completion value is the assigned value, so
-        // the injector receives the script's result (and it's also reachable as
-        // window.psstResult).
-        iife: false,
+        // value of the last evaluated expression). `iife: true` wraps the whole
+        // bundle -- module table, `__webpack_require__`, and the rest of the
+        // webpack runtime -- in a closure, so none of that leaks into the
+        // isolated world shared with other Brave-injected scripts. On its own
+        // that wrapper doesn't propagate a result out: `library: { type:
+        // 'window' }` only appends `window.psstResult = <expr>;` as a plain
+        // statement inside it, with no `return`. WrapPsstResultInClosurePlugin
+        // (scripts/webpack/wrap-psst-result-plugin.js) rewrites that statement
+        // into `return (window.psstResult = <expr>);`, so the assignment still
+        // runs but its value also becomes the outer closure's completion value
+        // -- which is what the injector reads.
+        iife: true,
         library: {
           name: 'psstResult',
           type: 'window',
