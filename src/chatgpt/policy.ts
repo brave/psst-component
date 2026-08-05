@@ -14,31 +14,44 @@ export class ChatGptPolicyScript extends PolicyScriptBase {
         const errors = await this.clickModalSelectors(modalSelectors);
 
         return new Promise((resolve, reject) => {
-          let intervalId: number|null = null;
+          let timeoutId: number|null = null;
           let attemptCount = 0;
 
           const wrappedResolve = () => {
-            if (intervalId) clearInterval(intervalId);
+            if (timeoutId) clearTimeout(timeoutId);
             resolve();
+          };
+
+          // Schedules the next attempt only once the previous checkCheckboxes
+          // call has settled (via wrappedResolve/wrappedReject below), rather
+          // than on a fixed setInterval cadence. checkCheckboxes awaits
+          // waitForElement/waitForAttributeValue, which can each take longer
+          // than WAIT_FOR_PAGE_TIMEOUT; firing on a fixed interval regardless
+          // of completion let two overlapping attempts both observe a stale
+          // aria-checked value and both click, toggling the setting back to
+          // its original state.
+          const scheduleNextAttempt = () => {
+            timeoutId = setTimeout(() => {
+              this.checkCheckboxes(
+                  wrappedResolve, wrappedReject, selectorData, turnOff);
+            }, ChatGptPolicyScript.WAIT_FOR_PAGE_TIMEOUT);
           };
 
           const wrappedReject = (errorDescription: string|null = null) => {
             attemptCount++;
             if (attemptCount >=
                 ChatGptPolicyScript.WAIT_FOR_PAGE_ATTEMPTS_COUNT) {
-              if (intervalId) clearInterval(intervalId);
               reject(new Error(`Checkbox not found after ${
                   ChatGptPolicyScript
                       .WAIT_FOR_PAGE_ATTEMPTS_COUNT} attempts. Error: ${
                   errorDescription}`));
+            } else {
+              scheduleNextAttempt();
             }
           };
 
           if (!errors) {
-            intervalId = setInterval(() => {
-              this.checkCheckboxes(
-                  wrappedResolve, wrappedReject, selectorData, turnOff);
-            }, ChatGptPolicyScript.WAIT_FOR_PAGE_TIMEOUT);
+            scheduleNextAttempt();
           } else {
             reject(new Error(`Modal selectors error: ${errors.join('; ')}`));
           }

@@ -16,6 +16,8 @@ export interface Task {
   description: string;
   modal_selectors: ModalSelectorData[] | undefined;
   selector: ModalSelectorData;
+  available_for_countries: string[] | undefined;
+  unavailable_for_countries: string[] | undefined;
   turn_off: boolean;
   error_description: string|undefined;
 }
@@ -86,6 +88,8 @@ export const moveCurrentTask =
         selector: psstObj.current_task.selector,
         turn_off: psstObj.current_task.turn_off,
         modal_selectors: psstObj.current_task.modal_selectors,
+        available_for_countries: psstObj.current_task.available_for_countries,
+        unavailable_for_countries: psstObj.current_task.unavailable_for_countries,
         error_description: errorMessage
       };
 
@@ -186,3 +190,41 @@ export const calculateProgress = (psstObj: PsstData | undefined) => {
 
   return total === 0 ? 0 : Math.round((processed / total) * 100);
 };
+
+/**
+ * Determines if a task is available for a specific country.
+ *
+ * Logic:
+ * 1. If countryId is undefined (unknown country), default to true (do not restrict).
+ * 2. If unavailable_for_countries is defined and contains the countryId, return false.
+ * 3. If available_for_countries is defined:
+ *    - If it contains the countryId, return true.
+ *    - If it does NOT contain the countryId, return false.
+ * 4. If available_for_countries is undefined, default to true (assuming open access).
+ *
+ * @param task The task to check
+ * @param countryId The country ID to check against, or undefined if unknown
+ * @returns boolean
+ */
+export function isTaskAvailableForCountry(
+  task: Task,
+  countryId: string|undefined
+): boolean {
+  // 1. Unknown country: don't restrict availability.
+  if (countryId === undefined) {
+    return true;
+  }
+
+  // 2. Check explicit blocklist (unavailable)
+  if (task.unavailable_for_countries?.includes(countryId)) {
+    return false;
+  }
+
+  // 3. Check explicit allowlist (available)
+  if (task.available_for_countries) {
+    return task.available_for_countries.includes(countryId);
+  }
+
+  // 4. Default case: if no allowlist is defined and not blocked, it's available
+  return true;
+}
