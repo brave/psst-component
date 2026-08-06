@@ -28,11 +28,13 @@ declare global {
     // `true` in development builds, `false` (and dead-code-eliminated) in production.
     const __DEV__: boolean;
 
-    // The host prepends `const params = {...}` to the top of the bundle, making
-    // it a lexical global reachable by every module via the scope chain.
-    const params: string | PolicyScriptInputData | UserScriptInputData | undefined;
-
     interface Window {
+        // The host assigns `window.params = {...}` before injecting the
+        // bundle. Using an assignment (rather than a `const` declaration)
+        // means re-injecting the script on the same page -- e.g. on SPA
+        // navigations -- reassigns this property instead of throwing
+        // `Identifier 'params' has already been declared`.
+        params?: string | PolicyScriptInputData | UserScriptInputData;
         UserScriptInstance: UserScriptBase;
         PolicyScriptInstance: PolicyScriptBase;
     }

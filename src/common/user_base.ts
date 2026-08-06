@@ -42,6 +42,9 @@ export abstract class UserScriptBase {
       };
 
       const countryId = this.getParams().countryId;
+      if (__DEV__)
+        logger.info('countryId:', JSON.stringify(countryId));
+
       userData.tasks = userData.tasks.filter(
           task => isTaskAvailableForCountry(task, countryId));
 
@@ -59,13 +62,10 @@ export abstract class UserScriptBase {
   }
 
   private parseParams(): UserScriptInputData {
-    // The host injects `params` as a lexical global (see user.js, which
-    // reads `params.countryId` directly). It is NOT a property of
-    // window/globalThis, so we must reference the bare identifier and resolve
-    // it via the scope chain. Guard with `typeof` so a missing binding yields a
-    // fallback instead of a ReferenceError.
-    const rawParams = (typeof params !== 'undefined' && params) ||
-        (typeof window !== 'undefined' && (window as any).params) ||
+    // The host assigns `window.params` before injecting the bundle (see
+    // user.js, which reads `params.countryId` directly). Guard with `typeof`
+    // so a missing binding yields a fallback instead of a ReferenceError.
+    const rawParams = (typeof window !== 'undefined' && window.params) ||
         (typeof globalThis !== 'undefined' && (globalThis as any).params) ||
         '{}';
     if (__DEV__)

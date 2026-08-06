@@ -67,12 +67,12 @@ Each bundle is wrapped in an IIFE and read by its **completion value** rather th
 
 ## Script Parameters (Host → Script Communication)
 
-Both `user.js` and `policy.js` are injected as plain text into an isolated world — they have no module system and no way to receive arguments directly. Instead, the host **prepends a `const params = {...};` statement to the top of the bundle's source before injecting it**. Because the bundle is compiled with `output.iife: true`, that statement sits *outside* the bundle's own closure but in the same lexical scope, so every module inside the bundle can still read the bare `params` identifier via the scope chain — without it ever touching `window` or leaking into the surrounding page.
+Both `user.js` and `policy.js` are injected as plain text into an isolated world — they have no module system and no way to receive arguments directly. Instead, the host **assigns `window.params = {...};` before injecting the bundle**. Using an assignment rather than a `const params = {...};` declaration means re-injecting the script into the same page — e.g. on SPA navigations — reassigns `window.params` instead of throwing `Identifier 'params' has already been declared`.
 
 Each script parses this global defensively via a `parseParams()` method (see `UserScriptBase`/`PolicyScriptBase` in `src/common/`), which:
 
-1. Prefers the bare `params` identifier (the production path).
-2. Falls back to `window.params` / `globalThis.params` (useful for tests, which have no bundler-prepended binding).
+1. Prefers `window.params` (the production path; also what tests set).
+2. Falls back to `globalThis.params` (useful in non-browser environments).
 3. Falls back to `'{}'` if nothing is set.
 4. `JSON.parse`s the result if it came through as a string.
 

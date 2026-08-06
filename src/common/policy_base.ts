@@ -123,13 +123,10 @@ export abstract class PolicyScriptBase {
   }
 
   private parseParams(): PolicyScriptInputData {
-    // The host injects `params` as a lexical global (see policy.js, which
-    // reads `params.tasks` directly). It is NOT a property of
-    // window/globalThis, so we must reference the bare identifier and resolve
-    // it via the scope chain. Guard with `typeof` so a missing binding yields a
-    // fallback instead of a ReferenceError.
-    const rawParams = (typeof params !== 'undefined' && params) ||
-        (typeof window !== 'undefined' && (window as any).params) ||
+    // The host assigns `window.params` before injecting the bundle (see
+    // policy.js, which reads `params.tasks` directly). Guard with `typeof`
+    // so a missing binding yields a fallback instead of a ReferenceError.
+    const rawParams = (typeof window !== 'undefined' && window.params) ||
         (typeof globalThis !== 'undefined' && (globalThis as any).params) ||
         '{}';
     if (__DEV__)
