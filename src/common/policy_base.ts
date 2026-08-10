@@ -123,11 +123,10 @@ export abstract class PolicyScriptBase {
   }
 
   private parseParams(): PolicyScriptInputData {
-    // The host assigns `window.params` before injecting the bundle (see
-    // policy.js, which reads `params.tasks` directly). Guard with `typeof`
-    // so a missing binding yields a fallback instead of a ReferenceError.
+    // The host assigns `window.params` before injecting the bundle,
+    // Older hosts instead inject `params` 
     const rawParams = (typeof window !== 'undefined' && window.params) ||
-        (typeof globalThis !== 'undefined' && (globalThis as any).params) ||
+        (typeof params !== 'undefined' && params) ||
         '{}';
     if (__DEV__)
       logger.info('Parsing PolicyScriptInputData from params:', JSON.stringify(rawParams));

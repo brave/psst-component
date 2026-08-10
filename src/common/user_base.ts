@@ -66,7 +66,6 @@ export abstract class UserScriptBase {
     // user.js, which reads `params.countryId` directly). Guard with `typeof`
     // so a missing binding yields a fallback instead of a ReferenceError.
     const rawParams = (typeof window !== 'undefined' && window.params) ||
-        (typeof globalThis !== 'undefined' && (globalThis as any).params) ||
         '{}';
     if (__DEV__)
       logger.info('Parsing UserScriptInputData from params:', JSON.stringify(rawParams));

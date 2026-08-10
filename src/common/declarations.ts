@@ -28,6 +28,13 @@ declare global {
     // `true` in development builds, `false` (and dead-code-eliminated) in production.
     const __DEV__: boolean;
 
+    // Older hosts prepend `const params = {...}` to the top of the bundle,
+    // making it a lexical global reachable by every module via the scope
+    // chain, instead of assigning `window.params`. Kept for backward
+    // compatibility -- see the `window.params` doc below for the current
+    // mechanism, which takes priority when both are present.
+    const params: string | PolicyScriptInputData | undefined;
+
     interface Window {
         // The host assigns `window.params = {...}` before injecting the
         // bundle. Using an assignment (rather than a `const` declaration)
