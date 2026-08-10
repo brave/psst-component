@@ -62,10 +62,10 @@ export abstract class UserScriptBase {
   }
 
   private parseParams(): UserScriptInputData {
-    // The host assigns `window.params` before injecting the bundle (see
+    // The host assigns `window.__bravePsstParams` before injecting the bundle (see
     // user.js, which reads `params.countryId` directly). Guard with `typeof`
     // so a missing binding yields a fallback instead of a ReferenceError.
-    const rawParams = (typeof window !== 'undefined' && window.params) ||
+    const rawParams = (typeof window !== 'undefined' && window.__bravePsstParams) ||
         '{}';
     if (__DEV__)
       logger.info('Parsing UserScriptInputData from params:', JSON.stringify(rawParams));

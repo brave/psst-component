@@ -123,9 +123,9 @@ export abstract class PolicyScriptBase {
   }
 
   private parseParams(): PolicyScriptInputData {
-    // The host assigns `window.params` before injecting the bundle,
+    // The host assigns `window.__bravePsstParams` before injecting the bundle,
     // older hosts instead inject `params`
-    const rawParams = (typeof window !== 'undefined' && window.params) ||
+    const rawParams = (typeof window !== 'undefined' && window.__bravePsstParams) ||
         (typeof params !== 'undefined' && params) ||
         '{}';
     if (__DEV__)

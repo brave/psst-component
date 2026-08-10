@@ -157,21 +157,33 @@ describe('ChatgptUserScript.getTasks', () => {
     expect(instance.getTasks()).toBeUndefined();
   });
 
-  it('contains exactly the "improve the model" task with all required fields', () => {
+  it('contains the "improve the model" and "marketing privacy" tasks with all required fields', () => {
     mockDocumentCookie(authInfoCookie('Ada Lovelace'));
     mockQuerySelector(null);
 
     const instance = new ChatgptUserScript();
     const data = instance.getTasks() as UserScriptData;
 
-    expect(data.tasks).toHaveLength(1);
-    const [task] = data.tasks;
-    expect(task.uid).toBe('1');
-    expect(task.url).toBe('https://chatgpt.com/');
-    expect(task.selector).toEqual({ selector: 'button[data-testid="improve-model-toggle"]', event: 'click' });
-    expect(task.modal_selectors).toHaveLength(4);
-    expect(task.turn_off).toBe(true);
-    expect(task.error_description).toBeUndefined();
+    expect(data.tasks).toHaveLength(2);
+    const [improveModelTask, marketingPrivacyTask] = data.tasks;
+
+    expect(improveModelTask.uid).toBe('1');
+    expect(improveModelTask.url).toBe('https://chatgpt.com/');
+    expect(improveModelTask.selector).toEqual({ selector: 'button[data-testid="improve-model-toggle"]', event: 'click' });
+    expect(improveModelTask.modal_selectors).toHaveLength(4);
+    expect(improveModelTask.turn_off).toBe(true);
+    expect(improveModelTask.error_description).toBeUndefined();
+
+    expect(marketingPrivacyTask.uid).toBe('2');
+    expect(marketingPrivacyTask.url).toBe('https://chatgpt.com/');
+    expect(marketingPrivacyTask.selector).toEqual({
+      selector: 'button[type="button"][role="switch"][aria-checked="false"][data-state="unchecked"][value="on"].h-4',
+      event: 'click'
+    });
+    expect(marketingPrivacyTask.modal_selectors).toHaveLength(4);
+    expect(marketingPrivacyTask.available_for_countries).toEqual(['us']);
+    expect(marketingPrivacyTask.turn_off).toBe(true);
+    expect(marketingPrivacyTask.error_description).toBeUndefined();
   });
 
   it('propagates getUserId result into user_id', () => {

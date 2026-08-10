@@ -30,18 +30,18 @@ declare global {
 
     // Older hosts prepend `const params = {...}` to the top of the bundle,
     // making it a lexical global reachable by every module via the scope
-    // chain, instead of assigning `window.params`. Kept for backward
-    // compatibility -- see the `window.params` doc below for the current
+    // chain, instead of assigning `window.__bravePsstParams`. Kept for backward
+    // compatibility -- see the `window.__bravePsstParams` doc below for the current
     // mechanism, which takes priority when both are present.
     const params: string | PolicyScriptInputData | undefined;
 
     interface Window {
-        // The host assigns `window.params = {...}` before injecting the
+        // The host assigns `window.__bravePsstParams = {...}` before injecting the
         // bundle. Using an assignment (rather than a `const` declaration)
         // means re-injecting the script on the same page -- e.g. on SPA
         // navigations -- reassigns this property instead of throwing
         // `Identifier 'params' has already been declared`.
-        params?: string | PolicyScriptInputData | UserScriptInputData;
+        __bravePsstParams?: string | PolicyScriptInputData | UserScriptInputData;
         UserScriptInstance: UserScriptBase;
         PolicyScriptInstance: PolicyScriptBase;
     }

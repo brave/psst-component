@@ -52,14 +52,12 @@ class TestUserScript extends UserScriptBase {
 // its window/globalThis fallback. Set it there to simulate the host passing
 // UserScriptInputData through.
 const setGlobalParams = (value: unknown) => {
-  (globalThis as any).params = value;
-  (window as any).params = value;
+  (window as any).__bravePsstParams = value;
 };
 
 describe('UserScriptBase country filtering', () => {
   afterEach(() => {
-    delete (globalThis as any).params;
-    delete (window as any).params;
+    delete (window as any).__bravePsstParams;
   });
 
   it('defaults countryId to undefined when no params global is set, keeping all tasks regardless of country restrictions', () => {
