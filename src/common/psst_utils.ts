@@ -16,6 +16,10 @@ export interface Task {
   description: string;
   modal_selectors: ModalSelectorData[] | undefined;
   selector: ModalSelectorData;
+  /**
+   * available_for_countries and unavailable_for_countries it is array of country codes
+   * in the format of lowercase ISO 3166-1 alpha-2. Example: us, br, in.
+   */
   available_for_countries: string[] | undefined;
   unavailable_for_countries: string[] | undefined;
   turn_off: boolean;

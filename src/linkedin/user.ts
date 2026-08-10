@@ -172,7 +172,7 @@ export class LinkedinUserScript extends UserScriptBase {
             event: 'click'
           },
           modal_selectors: undefined,
-          available_for_countries: undefined,
+          available_for_countries: ['US'],
           unavailable_for_countries: undefined,
           turn_off: true,
           error_description: undefined
