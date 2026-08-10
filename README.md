@@ -72,9 +72,9 @@ Both `user.js` and `policy.js` are injected as plain text into an isolated world
 Each script parses this global defensively via a `parseParams()` method (see `UserScriptBase`/`PolicyScriptBase` in `src/common/`), which:
 
 1. Prefers `window.params` (the production path; also what tests set).
-2. Falls back to `globalThis.params` (useful in non-browser environments).
-3. Falls back to `'{}'` if nothing is set.
-4. `JSON.parse`s the result if it came through as a string.
+2. For backward compatibility supports old way: `params`
+2. Falls back to `'{}'` if nothing is set.
+3. `JSON.parse`s the result if it came through as a string.
 
 ### `user.js` parameters — `UserScriptInputData`
 
