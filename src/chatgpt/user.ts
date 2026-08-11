@@ -19,7 +19,7 @@ interface AuthInfoCookie {
 }
 
 export class ChatgptUserScript extends UserScriptBase {
-    readonly version = 1;
+    readonly version = 2;
     readonly includeUrlPatterns: string[] = ['https://chatgpt.com/*'];
     readonly excludeUrlPatterns: string[] = [];
     readonly userScript: string = 'user.js';
@@ -79,6 +79,28 @@ export class ChatgptUserScript extends UserScriptBase {
                  /*Click on the improve the model button*/
                  {selector: 'button[data-testid="improve-model-open-modal-button"] div.ps-3', event: 'click'},
                 ],
+                available_for_countries: undefined,
+                unavailable_for_countries: undefined,
+                turn_off: true,
+                error_description: undefined
+            },
+            {
+                uid: '2',
+                url: 'https://chatgpt.com/',
+                description: 'Disable "Marketing privacy"',
+                selector: {selector: 'button[type="button"][role="switch"][aria-checked="false"][data-state="unchecked"][value="on"].h-4', event: 'click'},
+                modal_selectors: [
+                 /*Select main menu*/
+                 {selector: '[data-testid="accounts-profile-button"] > div.flex.min-w-0.items-center.gap-2', event: 'pointerdown'},
+                 /*Select Settings menu item*/
+                 {selector: '[data-testid="settings-menu-item"]', event: 'click'},
+                 /*Select Data controls tab*/
+                 {selector: "[data-testid='data-controls-tab'] > div.min-w-0 > div", event: 'mousedown'},
+                 /*Click on the marketing privacy button*/
+                 {selector: 'button[type="button"].w-full.disabled\\:cursor-not-allowed.disabled\\:opacity-50', event: 'click'},
+                ],
+                available_for_countries: ['us'],
+                unavailable_for_countries: undefined,
                 turn_off: true,
                 error_description: undefined
             }

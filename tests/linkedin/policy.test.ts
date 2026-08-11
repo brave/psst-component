@@ -4,7 +4,7 @@
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { TwitterPolicyScript } from '../../src/twitter/policy';
+import { LinkedInPolicyScript } from '../../src/linkedin/policy';
 import { PolicyScriptBase } from '../../src/common/policy_base';
 import { appendCheckbox } from '../common/policy_mocks';
 
@@ -12,13 +12,13 @@ const ATTEMPTS = PolicyScriptBase.WAIT_FOR_PAGE_ATTEMPTS_COUNT;
 const TICK = PolicyScriptBase.WAIT_FOR_PAGE_TIMEOUT;
 const SELECTOR = { selector: '#toggle', event: 'click' };
 
-describe('TwitterPolicyScript.waitForSettingAppliedWithTimeout', () => {
-  let instance: TwitterPolicyScript;
+describe('LinkedInPolicyScript.waitForSettingAppliedWithTimeout', () => {
+  let instance: LinkedInPolicyScript;
 
   beforeEach(() => {
     vi.useFakeTimers();
     document.body.innerHTML = '';
-    instance = new TwitterPolicyScript();
+    instance = new LinkedInPolicyScript();
   });
 
   afterEach(() => {
@@ -160,14 +160,14 @@ describe('TwitterPolicyScript.waitForSettingAppliedWithTimeout', () => {
     });
   });
 
-  describe('modal_selectors (unsupported on twitter)', () => {
+  describe('modal_selectors (unsupported on linkedin)', () => {
     it('accepts a modal_selectors argument but never waits on or clicks it', async () => {
       const checkbox = appendCheckbox('toggle', false);
       const modalClickSpy = vi.fn();
-      // Deliberately never appended to document.body: if
-      // TwitterPolicyScript ever started waiting on modal_selectors like
-      // chatgpt does, this missing element would make the promise hang or
-      // reject instead of resolving on the very next tick.
+      // Deliberately never appended to document.body: if LinkedInPolicyScript
+      // ever started waiting on modal_selectors like chatgpt does, this
+      // missing element would make the promise hang or reject instead of
+      // resolving on the very next tick.
       const modal = document.createElement('div');
       modal.id = 'modal-step';
       modal.addEventListener('click', modalClickSpy);

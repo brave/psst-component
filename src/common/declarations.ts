@@ -15,6 +15,10 @@ export interface UserScriptData {
   tasks: Task[];
 }
 
+export interface UserScriptInputData {
+    countryId: string|undefined;
+}
+
 export interface PolicyScriptInputData extends UserScriptData {
     initial_execution: boolean;
 }
@@ -24,11 +28,20 @@ declare global {
     // `true` in development builds, `false` (and dead-code-eliminated) in production.
     const __DEV__: boolean;
 
-    // The host prepends `const params = {...}` to the top of the bundle, making
-    // it a lexical global reachable by every module via the scope chain.
+    // Older hosts prepend `const params = {...}` to the top of the bundle,
+    // making it a lexical global reachable by every module via the scope
+    // chain, instead of assigning `window.__bravePsstParams`. Kept for backward
+    // compatibility -- see the `window.__bravePsstParams` doc below for the current
+    // mechanism, which takes priority when both are present.
     const params: string | PolicyScriptInputData | undefined;
 
     interface Window {
+        // The host assigns `window.__bravePsstParams = {...}` before injecting the
+        // bundle. Using an assignment (rather than a `const` declaration)
+        // means re-injecting the script on the same page -- e.g. on SPA
+        // navigations -- reassigns this property instead of throwing
+        // `Identifier 'params' has already been declared`.
+        __bravePsstParams?: string | PolicyScriptInputData | UserScriptInputData;
         UserScriptInstance: UserScriptBase;
         PolicyScriptInstance: PolicyScriptBase;
     }

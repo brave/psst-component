@@ -3,99 +3,114 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import type { UserScriptData } from '../../src/common/declarations';
-import { PSST_LOCALSTORAGE_KEY, PsstState } from '../../src/common/psst_utils';
 import type { Task } from '../../src/common/psst_utils';
+import { PSST_LOCALSTORAGE_KEY, PsstState } from '../../src/common/psst_utils';
 import { TwitterUserScript } from '../../src/twitter/user';
+import { mockDocumentCookie } from '../common/dom_mocks';
 
 const TWID_COOKIE_NAME = 'twid';
 
-/**
- * Reset document.cookie to an arbitrary string.
- * jsdom's cookie setter only appends, so we first expire every existing
- * cookie, then set the desired ones.
- */
-function setCookieJar(cookieString: string) {
-  for (const pair of document.cookie.split('; ')) {
-    const name = pair.split('=')[0];
-    if (name) {
-      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-    }
-  }
-  if (cookieString) {
-    for (const pair of cookieString.split('; ')) {
-      document.cookie = pair;
-    }
-  }
-}
-
 describe('TwitterUserScript.getUserId', () => {
-  beforeEach(() => {
-    setCookieJar('');
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('returns the twid cookie value when present', () => {
-    setCookieJar(`${TWID_COOKIE_NAME}=abc123; foo=bar`);
+    mockDocumentCookie(`${TWID_COOKIE_NAME}=abc123; foo=bar`);
+
     const instance = new TwitterUserScript();
     expect(instance.getUserId()).toBe('abc123');
   });
 
   it('returns undefined when the twid cookie is absent', () => {
-    setCookieJar('foo=bar; other=baz');
+    mockDocumentCookie('foo=bar; other=baz');
+
     const instance = new TwitterUserScript();
     expect(instance.getUserId()).toBeUndefined();
   });
 
-  it('returns undefined when twid is empty', () => {
-    setCookieJar(`${TWID_COOKIE_NAME}=`);
+  it('returns undefined when twid is present but empty', () => {
+    mockDocumentCookie(`${TWID_COOKIE_NAME}=`);
+
     const instance = new TwitterUserScript();
     expect(instance.getUserId()).toBeUndefined();
   });
 
-  it('handles URL-encoded cookie values', () => {
-    setCookieJar(`${TWID_COOKIE_NAME}=t%3A12345`);
+  it('returns the raw cookie value without URL-decoding it', () => {
+    // Unlike chatgpt's cookie parsing (which decodeURIComponent's the
+    // value), TwitterUserScript.getUserId() never decodes - the encoded
+    // string is returned verbatim.
+    mockDocumentCookie(`${TWID_COOKIE_NAME}=t%3A12345`);
+
     const instance = new TwitterUserScript();
     expect(instance.getUserId()).toBe('t%3A12345');
   });
 
   it('ignores similarly-named cookies', () => {
-    setCookieJar('twid_extra=other; twid=real_value');
+    mockDocumentCookie('twid_extra=other; twid=real_value');
+
     const instance = new TwitterUserScript();
     expect(instance.getUserId()).toBe('real_value');
+  });
+
+  it('truncates the value at a second "=" (naive split, not a real cookie parser)', () => {
+    // getUserId() does `twidCookie.split('=')` and destructures only the
+    // second element, so a value containing its own "=" is silently cut off
+    // after the first segment. Documented here as the actual current
+    // behavior, not as an endorsement of it.
+    mockDocumentCookie(`${TWID_COOKIE_NAME}=abc=123`);
+
+    const instance = new TwitterUserScript();
+    expect(instance.getUserId()).toBe('abc');
   });
 });
 
 describe('TwitterUserScript.getTasks', () => {
   beforeEach(() => {
-    setCookieJar(`${TWID_COOKIE_NAME}=test_user`);
     localStorage.clear();
   });
 
-  it('returns a UserScriptData object with the correct shape', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('returns a UserScriptData object with the correct shape on success', () => {
+    mockDocumentCookie(`${TWID_COOKIE_NAME}=test_user`);
+
     const instance = new TwitterUserScript();
-    const data = instance.getTasks();
+    const data = instance.getTasks() as UserScriptData;
 
     expect(data).toBeDefined();
-    expect(data).toHaveProperty('user_id');
-    expect(data).toHaveProperty('share_experience_link');
-    expect(data).toHaveProperty('site_name');
+    expect(data).toHaveProperty('user_id', 'test_user');
+    expect(data).toHaveProperty('share_experience_link', 'https://x.com/intent/post?text=$1');
+    expect(data).toHaveProperty('site_name', 'x.com');
     expect(data).toHaveProperty('tasks');
   });
 
-  it('contains 5 task entries', () => {
+  it('returns undefined when no twid cookie is present', () => {
+    mockDocumentCookie('');
+
     const instance = new TwitterUserScript();
-    const data = instance.getTasks() as UserScriptData;
-    expect(data.tasks).toHaveLength(5);
+    expect(instance.getTasks()).toBeUndefined();
   });
 
-  it('has site_name set to x.com', () => {
+  it('contains 4 task entries, none using modal_selectors', () => {
+    mockDocumentCookie(`${TWID_COOKIE_NAME}=test_user`);
+
     const instance = new TwitterUserScript();
     const data = instance.getTasks() as UserScriptData;
-    expect(data.site_name).toBe('x.com');
+
+    expect(data.tasks).toHaveLength(4);
+    for (const task of data.tasks) {
+      expect(task.modal_selectors).toBeUndefined();
+    }
   });
 
   it('each task has all required fields', () => {
+    mockDocumentCookie(`${TWID_COOKIE_NAME}=test_user`);
+
     const instance = new TwitterUserScript();
     const data = instance.getTasks() as UserScriptData;
     const requiredFields: (keyof Task)[] = ['uid', 'url', 'description', 'selector', 'turn_off'];
@@ -108,6 +123,8 @@ describe('TwitterUserScript.getTasks', () => {
   });
 
   it('all task UIDs are unique', () => {
+    mockDocumentCookie(`${TWID_COOKIE_NAME}=test_user`);
+
     const instance = new TwitterUserScript();
     const data = instance.getTasks() as UserScriptData;
     const uids = data.tasks.map(t => t.uid);
@@ -115,28 +132,34 @@ describe('TwitterUserScript.getTasks', () => {
   });
 
   it('propagates getUserId result into user_id', () => {
+    mockDocumentCookie(`${TWID_COOKIE_NAME}=test_user`);
+
     const instance = new TwitterUserScript();
     const data = instance.getTasks() as UserScriptData;
     expect(data.user_id).toBe(instance.getUserId());
   });
 
   it('sets initial_execution to true when no psst state is stored', () => {
+    mockDocumentCookie(`${TWID_COOKIE_NAME}=test_user`);
+
     const instance = new TwitterUserScript();
     const data = instance.getTasks() as UserScriptData;
     expect(data.initial_execution).toBe(true);
   });
 
   it('sets initial_execution to false when psst state is STARTED', () => {
-    localStorage.setItem(
-        PSST_LOCALSTORAGE_KEY, JSON.stringify({state: PsstState.STARTED}));
+    mockDocumentCookie(`${TWID_COOKIE_NAME}=test_user`);
+    localStorage.setItem(PSST_LOCALSTORAGE_KEY, JSON.stringify({ state: PsstState.STARTED }));
+
     const instance = new TwitterUserScript();
     const data = instance.getTasks() as UserScriptData;
     expect(data.initial_execution).toBe(false);
   });
 
   it('sets initial_execution to true when psst state is COMPLETED', () => {
-    localStorage.setItem(
-        PSST_LOCALSTORAGE_KEY, JSON.stringify({state: PsstState.COMPLETED}));
+    mockDocumentCookie(`${TWID_COOKIE_NAME}=test_user`);
+    localStorage.setItem(PSST_LOCALSTORAGE_KEY, JSON.stringify({ state: PsstState.COMPLETED }));
+
     const instance = new TwitterUserScript();
     const data = instance.getTasks() as UserScriptData;
     expect(data.initial_execution).toBe(true);

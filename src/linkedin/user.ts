@@ -31,7 +31,7 @@ function deleteCookie(name: string): void {
 }
 
 export class LinkedinUserScript extends UserScriptBase {
-  readonly version = 2;
+  readonly version = 3;
   readonly includeUrlPatterns: string[] = ['https://www.linkedin.com/*'];
   readonly excludeUrlPatterns: string[] = [];
   readonly userScript: string = 'user.js';
@@ -107,6 +107,8 @@ export class LinkedinUserScript extends UserScriptBase {
             event: 'click'
           },
           modal_selectors: undefined,
+          available_for_countries: undefined,
+          unavailable_for_countries: undefined,
           turn_off: true,
           error_description: undefined
         },
@@ -122,6 +124,8 @@ export class LinkedinUserScript extends UserScriptBase {
             event: 'click'
           },
           modal_selectors: undefined,
+          available_for_countries: undefined,
+          unavailable_for_countries: undefined,
           turn_off: true,
           error_description: undefined
         },
@@ -136,6 +140,8 @@ export class LinkedinUserScript extends UserScriptBase {
             event: 'click'
           },
           modal_selectors: undefined,
+          available_for_countries: undefined,
+          unavailable_for_countries: undefined,
           turn_off: true,
           error_description: undefined
         },
@@ -150,6 +156,8 @@ export class LinkedinUserScript extends UserScriptBase {
             event: 'click'
           },
           modal_selectors: undefined,
+          available_for_countries: undefined,
+          unavailable_for_countries: undefined,
           turn_off: true,
           error_description: undefined
         },
@@ -164,6 +172,8 @@ export class LinkedinUserScript extends UserScriptBase {
             event: 'click'
           },
           modal_selectors: undefined,
+          available_for_countries: ['us'],
+          unavailable_for_countries: undefined,
           turn_off: true,
           error_description: undefined
         },
@@ -176,6 +186,8 @@ export class LinkedinUserScript extends UserScriptBase {
             event: 'click'
           },
           modal_selectors: undefined,
+          available_for_countries: undefined,
+          unavailable_for_countries: undefined,
           turn_off: true,
           error_description: undefined
         },
@@ -190,6 +202,8 @@ export class LinkedinUserScript extends UserScriptBase {
             event: 'click'
           },
           modal_selectors: undefined,
+          available_for_countries: undefined,
+          unavailable_for_countries: undefined,
           turn_off: true,
           error_description: undefined
         },
@@ -204,6 +218,8 @@ export class LinkedinUserScript extends UserScriptBase {
             event: 'click'
           },
           modal_selectors: undefined,
+          available_for_countries: undefined,
+          unavailable_for_countries: undefined,
           turn_off: true,
           error_description: undefined
         },
@@ -219,6 +235,8 @@ export class LinkedinUserScript extends UserScriptBase {
             event: 'click'
           },
           modal_selectors: undefined,
+          available_for_countries: undefined,
+          unavailable_for_countries: undefined,
           turn_off: true,
           error_description: undefined
         },
@@ -233,6 +251,8 @@ export class LinkedinUserScript extends UserScriptBase {
             event: 'click'
           },
           modal_selectors: undefined,
+          available_for_countries: undefined,
+          unavailable_for_countries: undefined,
           turn_off: true,
           error_description: undefined
         },
@@ -245,6 +265,8 @@ export class LinkedinUserScript extends UserScriptBase {
             event: 'click'
           },
           modal_selectors: undefined,
+          available_for_countries: undefined,
+          unavailable_for_countries: undefined,
           turn_off: true,
           error_description: undefined
         },
@@ -260,6 +282,8 @@ export class LinkedinUserScript extends UserScriptBase {
             event: 'click'
           },
           modal_selectors: undefined,
+          available_for_countries: undefined,
+          unavailable_for_countries: undefined,
           turn_off: true,
           error_description: undefined
         },
@@ -274,6 +298,8 @@ export class LinkedinUserScript extends UserScriptBase {
             event: 'click'
           },
           modal_selectors: undefined,
+          available_for_countries: undefined,
+          unavailable_for_countries: undefined,
           turn_off: true,
           error_description: undefined
         }
