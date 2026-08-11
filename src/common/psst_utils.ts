@@ -206,10 +206,17 @@ export const calculateProgress = (psstObj: PsstData | undefined) => {
  *    - If it does NOT contain the countryId, return false.
  * 4. If available_for_countries is undefined, default to true (assuming open access).
  *
+ * countryId and the country list entries come from independent sources (host-injected
+ * params vs. task config), so comparisons are case- and whitespace-normalized.
+ *
  * @param task The task to check
  * @param countryId The country ID to check against, or undefined if unknown
  * @returns boolean
  */
+function normalizeCountryId(countryId: string): string {
+  return countryId.trim().toUpperCase();
+}
+
 export function isTaskAvailableForCountry(
   task: Task,
   countryId: string|undefined
@@ -219,14 +226,18 @@ export function isTaskAvailableForCountry(
     return true;
   }
 
+  const normalizedCountryId = normalizeCountryId(countryId);
+
   // 2. Check explicit blocklist (unavailable)
-  if (task.unavailable_for_countries?.includes(countryId)) {
+  if (task.unavailable_for_countries?.some(
+      id => normalizeCountryId(id) === normalizedCountryId)) {
     return false;
   }
 
   // 3. Check explicit allowlist (available)
   if (task.available_for_countries) {
-    return task.available_for_countries.includes(countryId);
+    return task.available_for_countries.some(
+        id => normalizeCountryId(id) === normalizedCountryId);
   }
 
   // 4. Default case: if no allowlist is defined and not blocked, it's available

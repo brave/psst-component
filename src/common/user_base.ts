@@ -43,13 +43,13 @@ export abstract class UserScriptBase {
 
       const countryId = this.getParams().countryId;
       if (__DEV__)
-        logger.info('countryId:', JSON.stringify(countryId));
+        logger.debug('countryId:', JSON.stringify(countryId));
 
       userData.tasks = userData.tasks.filter(
           task => isTaskAvailableForCountry(task, countryId));
 
       if (__DEV__)
-        logger.info('Constructed UserScriptData:', JSON.stringify(userData));
+        logger.debug('Constructed UserScriptData:', JSON.stringify(userData));
       return userData;
     } catch (error) {
       if (__DEV__) logger.error('Failed to construct UserScriptData:', error);
@@ -65,10 +65,10 @@ export abstract class UserScriptBase {
     // The host assigns `window.__bravePsstParams` before injecting the bundle (see
     // user.js, which reads `params.countryId` directly). Guard with `typeof`
     // so a missing binding yields a fallback instead of a ReferenceError.
-    const rawParams = (typeof window !== 'undefined' && window.__bravePsstParams) ||
-        '{}';
+    const hostParams = typeof window !== 'undefined' ? window.__bravePsstParams : undefined;
+    const rawParams = hostParams ?? '{}';
     if (__DEV__)
-      logger.info('Parsing UserScriptInputData from params:', JSON.stringify(rawParams));
+      logger.debug('Parsing UserScriptInputData from params:', JSON.stringify(rawParams));
     const parsed =
         typeof rawParams === 'string' ? JSON.parse(rawParams) : rawParams;
 

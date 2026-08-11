@@ -125,11 +125,11 @@ export abstract class PolicyScriptBase {
   private parseParams(): PolicyScriptInputData {
     // The host assigns `window.__bravePsstParams` before injecting the bundle,
     // older hosts instead inject `params`
-    const rawParams = (typeof window !== 'undefined' && window.__bravePsstParams) ||
-        (typeof params !== 'undefined' && params) ||
-        '{}';
+    const hostParams = typeof window !== 'undefined' ? window.__bravePsstParams : undefined;
+    const legacyParams = typeof params !== 'undefined' ? params : undefined;
+    const rawParams = hostParams ?? legacyParams ?? '{}';
     if (__DEV__)
-      logger.info('Parsing PolicyScriptInputData from params:', JSON.stringify(rawParams));
+      logger.debug('Parsing PolicyScriptInputData from params:', JSON.stringify(rawParams));
     const parsed =
         typeof rawParams === 'string' ? JSON.parse(rawParams) : rawParams;
 

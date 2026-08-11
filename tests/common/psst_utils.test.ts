@@ -23,7 +23,7 @@ const makeTask = (overrides: Partial<Task> = {}): Task => ({
 describe('isTaskAvailableForCountry', () => {
   it('is available when countryId is undefined, even for a restricted task', () => {
     const task = makeTask({
-      available_for_countries: ['US'],
+      available_for_countries: ['us'],
       unavailable_for_countries: ['DE']
     });
 
@@ -31,32 +31,50 @@ describe('isTaskAvailableForCountry', () => {
   });
 
   it('is unavailable when the countryId is in unavailable_for_countries', () => {
-    const task = makeTask({ unavailable_for_countries: ['US'] });
+    const task = makeTask({ unavailable_for_countries: ['us'] });
 
-    expect(isTaskAvailableForCountry(task, 'US')).toBe(false);
+    expect(isTaskAvailableForCountry(task, 'us')).toBe(false);
   });
 
   it('is available when the countryId is not in unavailable_for_countries', () => {
     const task = makeTask({ unavailable_for_countries: ['DE'] });
 
-    expect(isTaskAvailableForCountry(task, 'US')).toBe(true);
+    expect(isTaskAvailableForCountry(task, 'us')).toBe(true);
   });
 
   it('is available when the countryId is in available_for_countries', () => {
-    const task = makeTask({ available_for_countries: ['US'] });
+    const task = makeTask({ available_for_countries: ['us'] });
 
-    expect(isTaskAvailableForCountry(task, 'US')).toBe(true);
+    expect(isTaskAvailableForCountry(task, 'us')).toBe(true);
   });
 
   it('is unavailable when the countryId is not in available_for_countries', () => {
     const task = makeTask({ available_for_countries: ['DE'] });
 
-    expect(isTaskAvailableForCountry(task, 'US')).toBe(false);
+    expect(isTaskAvailableForCountry(task, 'us')).toBe(false);
   });
 
   it('is available when neither available_for_countries nor unavailable_for_countries is set', () => {
     const task = makeTask();
 
-    expect(isTaskAvailableForCountry(task, 'US')).toBe(true);
+    expect(isTaskAvailableForCountry(task, 'us')).toBe(true);
+  });
+
+  it('matches unavailable_for_countries regardless of countryId casing', () => {
+    const task = makeTask({ unavailable_for_countries: ['us'] });
+
+    expect(isTaskAvailableForCountry(task, 'US')).toBe(false);
+  });
+
+  it('matches available_for_countries regardless of list entry casing', () => {
+    const task = makeTask({ available_for_countries: ['US'] });
+
+    expect(isTaskAvailableForCountry(task, 'us')).toBe(true);
+  });
+
+  it('ignores surrounding whitespace when matching countryId', () => {
+    const task = makeTask({ available_for_countries: ['us'] });
+
+    expect(isTaskAvailableForCountry(task, ' us ')).toBe(true);
   });
 });

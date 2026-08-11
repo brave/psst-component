@@ -63,8 +63,8 @@ describe('UserScriptBase country filtering', () => {
   it('defaults countryId to undefined when no params global is set, keeping all tasks regardless of country restrictions', () => {
     const instance = new TestUserScript([
       makeTask({ uid: '1' }),
-      makeTask({ uid: '2', available_for_countries: ['US'] }),
-      makeTask({ uid: '3', unavailable_for_countries: ['US'] }),
+      makeTask({ uid: '2', available_for_countries: ['us'] }),
+      makeTask({ uid: '3', unavailable_for_countries: ['us'] }),
     ]);
 
     const data = instance.getTasks() as UserScriptData;
@@ -76,8 +76,8 @@ describe('UserScriptBase country filtering', () => {
     setGlobalParams({ countryId: undefined });
     const instance = new TestUserScript([
       makeTask({ uid: '1' }),
-      makeTask({ uid: '2', available_for_countries: ['US'] }),
-      makeTask({ uid: '3', unavailable_for_countries: ['US'] }),
+      makeTask({ uid: '2', available_for_countries: ['us'] }),
+      makeTask({ uid: '3', unavailable_for_countries: ['us'] }),
     ]);
 
     const data = instance.getTasks() as UserScriptData;
@@ -86,9 +86,9 @@ describe('UserScriptBase country filtering', () => {
   });
 
   it('reads countryId from a params global object and keeps only matching available_for_countries tasks', () => {
-    setGlobalParams({ countryId: 'US' });
+    setGlobalParams({ countryId: 'us' });
     const instance = new TestUserScript([
-      makeTask({ uid: '1', available_for_countries: ['US'] }),
+      makeTask({ uid: '1', available_for_countries: ['us'] }),
       makeTask({ uid: '2', available_for_countries: ['DE'] }),
     ]);
 
@@ -98,9 +98,9 @@ describe('UserScriptBase country filtering', () => {
   });
 
   it('reads countryId from a JSON-stringified params global', () => {
-    setGlobalParams(JSON.stringify({ countryId: 'US' }));
+    setGlobalParams(JSON.stringify({ countryId: 'us' }));
     const instance = new TestUserScript([
-      makeTask({ uid: '1', available_for_countries: ['US'] }),
+      makeTask({ uid: '1', available_for_countries: ['us'] }),
       makeTask({ uid: '2', available_for_countries: ['DE'] }),
     ]);
 
@@ -110,9 +110,9 @@ describe('UserScriptBase country filtering', () => {
   });
 
   it('excludes tasks whose unavailable_for_countries includes the current country', () => {
-    setGlobalParams({ countryId: 'US' });
+    setGlobalParams({ countryId: 'us' });
     const instance = new TestUserScript([
-      makeTask({ uid: '1', unavailable_for_countries: ['US'] }),
+      makeTask({ uid: '1', unavailable_for_countries: ['us'] }),
       makeTask({ uid: '2', unavailable_for_countries: ['DE'] }),
     ]);
 
