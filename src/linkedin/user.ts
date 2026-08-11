@@ -31,7 +31,7 @@ function deleteCookie(name: string): void {
 }
 
 export class LinkedinUserScript extends UserScriptBase {
-  readonly version = 2;
+  readonly version = 3;
   readonly includeUrlPatterns: string[] = ['https://www.linkedin.com/*'];
   readonly excludeUrlPatterns: string[] = [];
   readonly userScript: string = 'user.js';

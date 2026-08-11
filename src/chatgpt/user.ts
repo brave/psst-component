@@ -19,7 +19,7 @@ interface AuthInfoCookie {
 }
 
 export class ChatgptUserScript extends UserScriptBase {
-    readonly version = 1;
+    readonly version = 2;
     readonly includeUrlPatterns: string[] = ['https://chatgpt.com/*'];
     readonly excludeUrlPatterns: string[] = [];
     readonly userScript: string = 'user.js';
