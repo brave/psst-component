@@ -5,7 +5,7 @@
 
 import type {PolicyScriptInputData} from './declarations';
 import {logger} from './logger';
-import {calculateProgress, type ModalSelectorData, moveCurrentTask, normalizeModalSelector, PSST_LOCALSTORAGE_KEY, type PsstData, PsstState, type Task} from './psst_utils';
+import {calculateProgress, type ModalSelectorData, moveCurrentTask, normalizeModalSelector, PSST_STORAGE_KEY, type PsstData, PsstState, type Task} from './psst_utils';
 
 
 export interface PolicyScriptResult {
@@ -28,7 +28,7 @@ export abstract class PolicyScriptBase {
   async applyPolicies(): Promise<PolicyScriptResult> {
     if (__DEV__)
       logger.info('Starting applyPolicies with params:', JSON.stringify(this.params));
-    const psstObj = this.loadPsstDataFromLocalStorage();
+    const psstObj = this.loadPsstDataFromStorage();
     if (!psstObj || this.getParams().initial_execution) {
       const firstTask = this.getParams().tasks[0];
       const initialPsstData: PsstData = {
@@ -46,10 +46,6 @@ export abstract class PolicyScriptBase {
         psst: initialPsstData
       };
       return result;
-    }
-
-    if (psstObj.state === PsstState.COMPLETED) {
-      return {next_url: undefined, psst: psstObj};
     }
 
     try {
@@ -80,7 +76,13 @@ export abstract class PolicyScriptBase {
     const nextUrl = hasMoreTasks ? next_task.url : psstObj.start_url;
     psstObj.progress = calculateProgress(psstObj);
 
-    this.savePsstDataToStorage(psstObj);
+    if (psstObj.state === PsstState.COMPLETED) {
+      // Clean up storage on finish
+      this.cleanPsstDataStorage();
+    } else {
+      this.savePsstDataToStorage(psstObj);
+    }
+
     return {next_url: nextUrl, psst: psstObj};
   }
 
@@ -89,11 +91,11 @@ export abstract class PolicyScriptBase {
     return this.params;
   }
 
-  protected loadPsstDataFromLocalStorage(): PsstData|undefined {
+  protected loadPsstDataFromStorage(): PsstData|undefined {
     try {
-      const stored = localStorage.getItem(PSST_LOCALSTORAGE_KEY);
+      const stored = sessionStorage.getItem(PSST_STORAGE_KEY);
       if (!stored) {
-        if (__DEV__) logger.info('No existing PsstData found in localStorage.');
+        if (__DEV__) logger.info('No existing PsstData found in sessionStorage.');
         return undefined;
       }
 
@@ -108,17 +110,26 @@ export abstract class PolicyScriptBase {
         tasks_list: parsed.tasks_list ?? []
       } as PsstData;
     } catch (error) {
-      if (__DEV__) logger.error('Failed to parse PsstData from localStorage:', error);
+      if (__DEV__) logger.error('Failed to parse PsstData from sessionStorage:', error);
       return undefined;
     }
   }
 
   protected savePsstDataToStorage(psstData: PsstData): void {
     try {
-      if (__DEV__) logger.info('Saving PsstData to localStorage:', JSON.stringify(psstData));
-      localStorage.setItem(PSST_LOCALSTORAGE_KEY, JSON.stringify(psstData));
+      if (__DEV__) logger.info('Saving PsstData to sessionStorage:', JSON.stringify(psstData));
+      sessionStorage.setItem(PSST_STORAGE_KEY, JSON.stringify(psstData));
     } catch (error) {
-      if (__DEV__) logger.error('Failed to save PsstData to localStorage:', error);
+      if (__DEV__) logger.error('Failed to save PsstData to sessionStorage:', error);
+    }
+  }
+
+  protected cleanPsstDataStorage(): void {
+    try {
+      if (__DEV__) logger.info('Clean PsstData to sessionStorage');
+      sessionStorage.removeItem(PSST_STORAGE_KEY);
+    } catch (error) {
+      if (__DEV__) logger.error('Failed to clean PsstData in the sessionStorage:', error);
     }
   }
 

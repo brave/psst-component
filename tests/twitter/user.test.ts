@@ -6,7 +6,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import type { UserScriptData } from '../../src/common/declarations';
 import type { Task } from '../../src/common/psst_utils';
-import { PSST_LOCALSTORAGE_KEY, PsstState } from '../../src/common/psst_utils';
+import { PSST_STORAGE_KEY, PsstState } from '../../src/common/psst_utils';
 import { TwitterUserScript } from '../../src/twitter/user';
 import { mockDocumentCookie } from '../common/dom_mocks';
 
@@ -69,7 +69,7 @@ describe('TwitterUserScript.getUserId', () => {
 
 describe('TwitterUserScript.getTasks', () => {
   beforeEach(() => {
-    localStorage.clear();
+    sessionStorage.clear();
   });
 
   afterEach(() => {
@@ -149,7 +149,7 @@ describe('TwitterUserScript.getTasks', () => {
 
   it('sets initial_execution to false when psst state is STARTED', () => {
     mockDocumentCookie(`${TWID_COOKIE_NAME}=test_user`);
-    localStorage.setItem(PSST_LOCALSTORAGE_KEY, JSON.stringify({ state: PsstState.STARTED }));
+    sessionStorage.setItem(PSST_STORAGE_KEY, JSON.stringify({ state: PsstState.STARTED }));
 
     const instance = new TwitterUserScript();
     const data = instance.getTasks() as UserScriptData;
@@ -158,7 +158,7 @@ describe('TwitterUserScript.getTasks', () => {
 
   it('sets initial_execution to true when psst state is COMPLETED', () => {
     mockDocumentCookie(`${TWID_COOKIE_NAME}=test_user`);
-    localStorage.setItem(PSST_LOCALSTORAGE_KEY, JSON.stringify({ state: PsstState.COMPLETED }));
+    sessionStorage.setItem(PSST_STORAGE_KEY, JSON.stringify({ state: PsstState.COMPLETED }));
 
     const instance = new TwitterUserScript();
     const data = instance.getTasks() as UserScriptData;

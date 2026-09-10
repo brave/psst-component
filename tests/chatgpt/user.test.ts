@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import type { UserScriptData } from '../../src/common/declarations';
-import { PSST_LOCALSTORAGE_KEY, PsstState } from '../../src/common/psst_utils';
+import { PSST_STORAGE_KEY, PsstState } from '../../src/common/psst_utils';
 import { ChatgptUserScript } from '../../src/chatgpt/user';
 import { fakeElementWithText, mockDocumentCookie, mockQuerySelector } from '../common/dom_mocks';
 
@@ -128,7 +128,7 @@ describe('ChatgptUserScript.getUserId', () => {
 
 describe('ChatgptUserScript.getTasks', () => {
   beforeEach(() => {
-    localStorage.clear();
+    sessionStorage.clear();
   });
 
   afterEach(() => {
@@ -207,7 +207,7 @@ describe('ChatgptUserScript.getTasks', () => {
   it('sets initial_execution to false when psst state is STARTED', () => {
     mockDocumentCookie(authInfoCookie('Ada Lovelace'));
     mockQuerySelector(null);
-    localStorage.setItem(PSST_LOCALSTORAGE_KEY, JSON.stringify({ state: PsstState.STARTED }));
+    sessionStorage.setItem(PSST_STORAGE_KEY, JSON.stringify({ state: PsstState.STARTED }));
 
     const instance = new ChatgptUserScript();
     const data = instance.getTasks() as UserScriptData;
@@ -217,7 +217,7 @@ describe('ChatgptUserScript.getTasks', () => {
   it('sets initial_execution to true when psst state is COMPLETED', () => {
     mockDocumentCookie(authInfoCookie('Ada Lovelace'));
     mockQuerySelector(null);
-    localStorage.setItem(PSST_LOCALSTORAGE_KEY, JSON.stringify({ state: PsstState.COMPLETED }));
+    sessionStorage.setItem(PSST_STORAGE_KEY, JSON.stringify({ state: PsstState.COMPLETED }));
 
     const instance = new ChatgptUserScript();
     const data = instance.getTasks() as UserScriptData;
