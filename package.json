@@ -21,7 +21,7 @@
     "node-releases": "2.0.51"
   },
   "devDependencies": {
-    "@types/node": "25.6.0",
+    "@types/node": "25.9.5",
     "jsdom": "29.1.1",
     "swf": "1.0.0",
     "ts-loader": "9.5.7",
