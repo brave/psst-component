@@ -114,7 +114,7 @@ Import the logger and **always guard the call site with `if (__DEV__)`**:
 import { logger } from "../common/logger";
 
 if (__DEV__) logger.debug('applying task', task);
-if (__DEV__) logger.error('Failed to save PsstData to localStorage:', error);
+if (__DEV__) logger.error('Failed to save PsstData to sessionStorage:', error);
 ```
 
 Available methods: `logger.log`, `logger.info`, `logger.warn`, `logger.error`, `logger.debug`. Messages are automatically prefixed with `[psst]`.
@@ -149,7 +149,7 @@ psst-component-test-typescript/
 │   ├── common/              # Shared base definitions/interfaces (not a website)
 │   │   ├── declarations.ts  # Shared types + ambient globals (__DEV__, params, ...)
 │   │   ├── logger.ts        # Dev-only logger, stripped from production builds
-│   │   ├── psst_utils.ts    # PsstData/Task types + shared helpers (localStorage, country filtering, ...)
+│   │   ├── psst_utils.ts    # PsstData/Task types + shared helpers (sessionStorage, country filtering, ...)
 │   │   ├── user_base.ts     # UserScriptBase — parses `params`, builds UserScriptData
 │   │   └── policy_base.ts   # PolicyScriptBase — parses `params`, applies tasks one at a time
 │   ├── twitter/              # A concrete website implementation

@@ -6,7 +6,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import type { UserScriptData } from '../../src/common/declarations';
 import type { Task } from '../../src/common/psst_utils';
-import { PSST_LOCALSTORAGE_KEY, PsstState } from '../../src/common/psst_utils';
+import { PSST_STORAGE_KEY, PsstState } from '../../src/common/psst_utils';
 import { LinkedinUserScript } from '../../src/linkedin/user';
 import { mockDocumentCookie, spyOnDocumentCookieWrites } from '../common/dom_mocks';
 
@@ -15,7 +15,7 @@ const CACHE_COOKIE_NAME = 'psst_linkedin_uid';
 
 /** Marks the page as signed in, the way LinkedIn's own app state does. */
 function markSignedIn() {
-  localStorage.setItem(SIGNED_USER_LS_KEY_NAME, '1');
+  sessionStorage.setItem(SIGNED_USER_LS_KEY_NAME, '1');
 }
 
 /** Builds the encoded cache cookie value getUserId()/readCachedUid() expect. */
@@ -33,7 +33,7 @@ function appendProfileLink(href: string): HTMLAnchorElement {
 
 describe('LinkedinUserScript.getUserId', () => {
   beforeEach(() => {
-    localStorage.clear();
+    sessionStorage.clear();
     document.body.innerHTML = '';
   });
 
@@ -51,8 +51,8 @@ describe('LinkedinUserScript.getUserId', () => {
       expect(writeSpy).toHaveBeenCalledWith(`${CACHE_COOKIE_NAME}=; max-age=0; path=/`);
     });
 
-    it('treats unrelated localStorage keys as not signed in', () => {
-      localStorage.setItem('some_other_key', '1');
+    it('treats unrelated sessionStorage keys as not signed in', () => {
+      sessionStorage.setItem('some_other_key', '1');
       mockDocumentCookie('');
 
       const instance = new LinkedinUserScript();
@@ -144,7 +144,7 @@ describe('LinkedinUserScript.getUserId', () => {
 
 describe('LinkedinUserScript.getTasks', () => {
   beforeEach(() => {
-    localStorage.clear();
+    sessionStorage.clear();
     document.body.innerHTML = '';
   });
 
@@ -230,7 +230,7 @@ describe('LinkedinUserScript.getTasks', () => {
 
   it('sets initial_execution to false when psst state is STARTED', () => {
     signInWithCachedUid('test_user');
-    localStorage.setItem(PSST_LOCALSTORAGE_KEY, JSON.stringify({ state: PsstState.STARTED }));
+    sessionStorage.setItem(PSST_STORAGE_KEY, JSON.stringify({ state: PsstState.STARTED }));
 
     const instance = new LinkedinUserScript();
     const data = instance.getTasks() as UserScriptData;
@@ -239,7 +239,7 @@ describe('LinkedinUserScript.getTasks', () => {
 
   it('sets initial_execution to true when psst state is COMPLETED', () => {
     signInWithCachedUid('test_user');
-    localStorage.setItem(PSST_LOCALSTORAGE_KEY, JSON.stringify({ state: PsstState.COMPLETED }));
+    sessionStorage.setItem(PSST_STORAGE_KEY, JSON.stringify({ state: PsstState.COMPLETED }));
 
     const instance = new LinkedinUserScript();
     const data = instance.getTasks() as UserScriptData;

@@ -40,15 +40,15 @@ export interface PsstData {
   tasks_list: Task[];
 }
 
-export const PSST_LOCALSTORAGE_KEY = 'psst';
+export const PSST_STORAGE_KEY = 'psst';
 
 export const isInitialExecution =
     () => {
-      if (typeof localStorage === 'undefined') {
+      if (typeof sessionStorage === 'undefined') {
         return true;
       }
 
-      const stored = localStorage.getItem(PSST_LOCALSTORAGE_KEY);
+      const stored = sessionStorage.getItem(PSST_STORAGE_KEY);
       if (stored === null) {
         return true;
       }
@@ -59,7 +59,7 @@ export const isInitialExecution =
         return state !== PsstState.STARTED;
       } catch (error) {
         if (__DEV__)
-          logger.error('Failed to parse PsstData from localStorage:', error);
+          logger.error('Failed to parse PsstData from sessionStorage:', error);
         return true;
       }
     }
