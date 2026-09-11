@@ -5,7 +5,7 @@
 
 import type {UserScriptData, UserScriptInputData} from './declarations';
 import {logger} from './logger';
-import {isInitialExecution, isTaskAvailableForCountry} from './psst_utils';
+import {getSHA, isInitialExecution, isTaskAvailableForCountry} from './psst_utils';
 
 export abstract class UserScriptBase {
   abstract readonly version: number;
@@ -36,7 +36,7 @@ export abstract class UserScriptBase {
       }
 
       const userData: UserScriptData = {
-        user_id: userId,
+        user_id: getSHA(userId),
         initial_execution: isInitialExecution(),
         ...this.getSiteScriptData()
       };

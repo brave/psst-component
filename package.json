@@ -32,5 +32,8 @@
     "webpack": "5.106.2",
     "webpack-cli": "7.0.2",
     "webpack-sources": "3.5.0"
+  },
+  "dependencies": {
+    "jssha": "^3.3.2"
   }
 }
