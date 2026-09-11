@@ -6,7 +6,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import type { UserScriptData } from '../../src/common/declarations';
 import type { Task } from '../../src/common/psst_utils';
-import { PSST_STORAGE_KEY, PsstState } from '../../src/common/psst_utils';
+import { PSST_STORAGE_KEY, PsstState, getSHA } from '../../src/common/psst_utils';
 import { LinkedinUserScript } from '../../src/linkedin/user';
 import { mockDocumentCookie, spyOnDocumentCookieWrites } from '../common/dom_mocks';
 
@@ -15,7 +15,7 @@ const CACHE_COOKIE_NAME = 'psst_linkedin_uid';
 
 /** Marks the page as signed in, the way LinkedIn's own app state does. */
 function markSignedIn() {
-  sessionStorage.setItem(SIGNED_USER_LS_KEY_NAME, '1');
+  localStorage.setItem(SIGNED_USER_LS_KEY_NAME, '1');
 }
 
 /** Builds the encoded cache cookie value getUserId()/readCachedUid() expect. */
@@ -33,6 +33,7 @@ function appendProfileLink(href: string): HTMLAnchorElement {
 
 describe('LinkedinUserScript.getUserId', () => {
   beforeEach(() => {
+    localStorage.clear();
     sessionStorage.clear();
     document.body.innerHTML = '';
   });
@@ -51,8 +52,8 @@ describe('LinkedinUserScript.getUserId', () => {
       expect(writeSpy).toHaveBeenCalledWith(`${CACHE_COOKIE_NAME}=; max-age=0; path=/`);
     });
 
-    it('treats unrelated sessionStorage keys as not signed in', () => {
-      sessionStorage.setItem('some_other_key', '1');
+    it('treats unrelated localStorage keys as not signed in', () => {
+      localStorage.setItem('some_other_key', '1');
       mockDocumentCookie('');
 
       const instance = new LinkedinUserScript();
@@ -144,6 +145,7 @@ describe('LinkedinUserScript.getUserId', () => {
 
 describe('LinkedinUserScript.getTasks', () => {
   beforeEach(() => {
+    localStorage.clear();
     sessionStorage.clear();
     document.body.innerHTML = '';
   });
@@ -164,7 +166,7 @@ describe('LinkedinUserScript.getTasks', () => {
     const data = instance.getTasks() as UserScriptData;
 
     expect(data).toBeDefined();
-    expect(data).toHaveProperty('user_id', 'test_user');
+    expect(data).toHaveProperty('user_id', getSHA('test_user'));
     expect(data).toHaveProperty('share_experience_link', '');
     expect(data).toHaveProperty('site_name', 'linkedin.com');
     expect(data).toHaveProperty('tasks');
@@ -212,12 +214,13 @@ describe('LinkedinUserScript.getTasks', () => {
     expect(uids.length).toBe(new Set(uids).size);
   });
 
-  it('propagates getUserId result into user_id', () => {
+  it('propagates the hashed getUserId result into user_id', () => {
     signInWithCachedUid('test_user');
 
     const instance = new LinkedinUserScript();
     const data = instance.getTasks() as UserScriptData;
-    expect(data.user_id).toBe(instance.getUserId());
+    expect(data.user_id).toBe(getSHA(instance.getUserId()!));
+    expect(data.user_id).not.toBe(instance.getUserId());
   });
 
   it('sets initial_execution to true when no psst state is stored', () => {

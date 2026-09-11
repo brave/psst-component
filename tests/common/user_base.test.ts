@@ -7,6 +7,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { UserScriptBase } from '../../src/common/user_base';
 import type { UserScriptData } from '../../src/common/declarations';
 import type { Task } from '../../src/common/psst_utils';
+import { getSHA } from '../../src/common/psst_utils';
 
 const makeTask = (overrides: Partial<Task> = {}): Task => ({
   uid: '1',
@@ -128,5 +129,53 @@ describe('UserScriptBase country filtering', () => {
     const data = instance.getTasks() as UserScriptData;
 
     expect(data.tasks.map(task => task.uid)).toEqual(['1']);
+  });
+});
+
+describe('UserScriptBase user_id hashing', () => {
+  afterEach(() => {
+    delete (window as any).__bravePsstParams;
+  });
+
+  it('replaces the raw user id with its SHA-256 hex hash', () => {
+    const instance = new TestUserScript([makeTask({ uid: '1' })], 'user-1');
+
+    const data = instance.getTasks() as UserScriptData;
+
+    // Known SHA-256("user-1") test vector, verified independently via
+    // `printf '%s' "user-1" | sha256sum`.
+    expect(data.user_id)
+        .toEqual(
+            'c6c289e49e9c05b2145860387b73bcb18df43fb09a1e4a4a9713c76c88bb541b');
+    expect(data.user_id).not.toEqual('user-1');
+  });
+
+  it('matches the getSHA helper output for the same user id', () => {
+    const instance = new TestUserScript([makeTask({ uid: '1' })], 'user-1');
+
+    const data = instance.getTasks() as UserScriptData;
+
+    expect(data.user_id).toEqual(getSHA('user-1'));
+  });
+
+  it('produces different hashes for different user ids', () => {
+    const instanceA =
+        new TestUserScript([makeTask({ uid: '1' })], 'user-1');
+    const instanceB =
+        new TestUserScript([makeTask({ uid: '1' })], 'user-2');
+
+    const dataA = instanceA.getTasks() as UserScriptData;
+    const dataB = instanceB.getTasks() as UserScriptData;
+
+    expect(dataA.user_id).not.toEqual(dataB.user_id);
+  });
+
+  it('produces the same hash on repeated calls for the same user id', () => {
+    const instance = new TestUserScript([makeTask({ uid: '1' })], 'user-1');
+
+    const first = (instance.getTasks() as UserScriptData).user_id;
+    const second = (instance.getTasks() as UserScriptData).user_id;
+
+    expect(first).toEqual(second);
   });
 });
