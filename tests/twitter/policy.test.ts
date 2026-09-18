@@ -12,6 +12,14 @@ const ATTEMPTS = PolicyScriptBase.WAIT_FOR_PAGE_ATTEMPTS_COUNT;
 const TICK = PolicyScriptBase.WAIT_FOR_PAGE_TIMEOUT;
 const SELECTOR = { selector: '#toggle', event: 'click' };
 
+// waitForSettingAppliedWithTimeout first awaits waitForElementWithRetry
+// (src/common/psst_utils.ts), which retries up to 20 times with a 500ms
+// timeout each when the selector never matches anything, before the
+// interval-based polling loop below even starts.
+const ELEMENT_RETRY_COUNT = 20;
+const ELEMENT_RETRY_TIMEOUT = 500;
+const PRE_WAIT_DURATION = ELEMENT_RETRY_COUNT * ELEMENT_RETRY_TIMEOUT;
+
 describe('TwitterPolicyScript.waitForSettingAppliedWithTimeout', () => {
   let instance: TwitterPolicyScript;
 
@@ -123,7 +131,7 @@ describe('TwitterPolicyScript.waitForSettingAppliedWithTimeout', () => {
         `Checkbox not found after ${ATTEMPTS} attempts. Error: No checkbox found`,
       );
 
-      await vi.advanceTimersByTimeAsync(TICK * ATTEMPTS);
+      await vi.advanceTimersByTimeAsync(PRE_WAIT_DURATION + TICK * ATTEMPTS);
       await assertion;
     });
 
@@ -150,7 +158,7 @@ describe('TwitterPolicyScript.waitForSettingAppliedWithTimeout', () => {
       });
 
       // One tick short of the limit.
-      await vi.advanceTimersByTimeAsync(TICK * (ATTEMPTS - 1));
+      await vi.advanceTimersByTimeAsync(PRE_WAIT_DURATION + TICK * (ATTEMPTS - 1));
       expect(rejected).toBe(false);
 
       // Settle the promise so it doesn't leak as an unhandled rejection.
