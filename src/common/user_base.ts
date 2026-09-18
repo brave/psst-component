@@ -41,7 +41,7 @@ export abstract class UserScriptBase {
         ...this.getSiteScriptData()
       };
 
-      const countryId = this.getParams().countryId;
+      const countryId = 'us';//this.getParams().countryId;
       if (__DEV__)
         logger.debug('countryId:', JSON.stringify(countryId));
 

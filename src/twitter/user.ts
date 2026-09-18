@@ -55,7 +55,7 @@ export class TwitterUserScript extends UserScriptBase {
           url: 'https://x.com/settings/location',
           description: 'Disable attaching location information to posts',
           selector:
-              {selector: 'input[type="checkbox"][aria-describedby="CHECKBOX_1_LABEL"]', event: 'click'},
+              {selector: 'input[type="checkbox"][aria-describedby^="CHECKBOX_"]', event: 'click'},
           modal_selectors: undefined,
           available_for_countries: undefined,
           unavailable_for_countries: undefined,
@@ -68,7 +68,7 @@ export class TwitterUserScript extends UserScriptBase {
           description:
               'Disable sharing additional information with X’s business partners.',
           selector:
-              {selector: 'input[type="checkbox"][aria-describedby="CHECKBOX_1_LABEL"]', event: 'click'},
+              {selector: 'input[type="checkbox"][aria-describedby^="CHECKBOX_"]', event: 'click'},
           modal_selectors: undefined,
           available_for_countries: undefined,
           unavailable_for_countries: undefined,
@@ -81,7 +81,7 @@ export class TwitterUserScript extends UserScriptBase {
           description:
               'Disable personalization based on your inferred identity',
           selector:
-              {selector: 'input[type="checkbox"][aria-describedby="CHECKBOX_1_LABEL"]', event: 'click'},
+              {selector: 'input[type="checkbox"][aria-describedby^="CHECKBOX_"]', event: 'click'},
           modal_selectors: undefined,
           available_for_countries: undefined,
           unavailable_for_countries: undefined,
@@ -93,7 +93,7 @@ export class TwitterUserScript extends UserScriptBase {
           url: 'https://x.com/settings/ads_preferences',
           description: 'Disable personalized ads',
           selector:
-              {selector: 'input[type="checkbox"][aria-describedby="CHECKBOX_1_LABEL"]', event: 'click'},
+              {selector: 'input[type="checkbox"][aria-describedby^="CHECKBOX_"]', event: 'click'},
           modal_selectors: undefined,
           available_for_countries: undefined,
           unavailable_for_countries: undefined,
