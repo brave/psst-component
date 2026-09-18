@@ -26,7 +26,7 @@ import {UserScriptBase} from '../common/user_base';
 const TWID_COOKIE_NAME = 'twid';
 
 export class TwitterUserScript extends UserScriptBase {
-  readonly version = 6;
+  readonly version = 7;
   readonly includeUrlPatterns: string[] = ['https://x.com/*'];
   readonly excludeUrlPatterns: string[] = [];
   readonly userScript: string = 'user.js';

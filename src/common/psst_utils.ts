@@ -128,22 +128,26 @@ export async function waitForElement(
       return resolve(element);
     }
 
+    let timer: ReturnType<typeof setTimeout>;
+    const root = document.documentElement ?? document;
+
     // If not found, set up an observer
     const observer = new MutationObserver((mutations, obs) => {
       const el = document.querySelector<HTMLElement>(selector);
       if (el) {
         obs.disconnect();
+        clearTimeout(timer);
         resolve(el);
       }
     });
 
-    observer.observe(document.body, {
+    observer.observe(root, {
       childList: true,
       subtree: true,
     });
 
     // Timeout fallback
-    setTimeout(() => {
+    timer = setTimeout(() => {
       observer.disconnect();
       reject(new Error(`The element not found within timeout`));
     }, timeout);
