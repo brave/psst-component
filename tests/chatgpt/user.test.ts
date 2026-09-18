@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import type { UserScriptData } from '../../src/common/declarations';
-import { PSST_STORAGE_KEY, PsstState } from '../../src/common/psst_utils';
+import { PSST_STORAGE_KEY, PsstState, getSHA } from '../../src/common/psst_utils';
 import { ChatgptUserScript } from '../../src/chatgpt/user';
 import { fakeElementWithText, mockDocumentCookie, mockQuerySelector } from '../common/dom_mocks';
 
@@ -143,7 +143,7 @@ describe('ChatgptUserScript.getTasks', () => {
     const data = instance.getTasks() as UserScriptData;
 
     expect(data).toBeDefined();
-    expect(data).toHaveProperty('user_id', 'Ada Lovelace');
+    expect(data).toHaveProperty('user_id', getSHA('Ada Lovelace'));
     expect(data).toHaveProperty('share_experience_link', '');
     expect(data).toHaveProperty('site_name', 'chatgpt.com');
     expect(data).toHaveProperty('tasks');
@@ -186,13 +186,14 @@ describe('ChatgptUserScript.getTasks', () => {
     expect(marketingPrivacyTask.error_description).toBeUndefined();
   });
 
-  it('propagates getUserId result into user_id', () => {
+  it('propagates the hashed getUserId result into user_id', () => {
     mockDocumentCookie(authInfoCookie('Ada Lovelace'));
     mockQuerySelector(null);
 
     const instance = new ChatgptUserScript();
     const data = instance.getTasks() as UserScriptData;
-    expect(data.user_id).toBe(instance.getUserId());
+    expect(data.user_id).toBe(getSHA(instance.getUserId()!));
+    expect(data.user_id).not.toBe(instance.getUserId());
   });
 
   it('sets initial_execution to true when no psst state is stored', () => {

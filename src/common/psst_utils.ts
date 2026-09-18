@@ -4,6 +4,7 @@
 // You can obtain one at https://mozilla.org/MPL/2.0/
 
 import {logger} from './logger';
+import jsSHA from "jssha";
 
 export interface ModalSelectorData {
   selector: string,
@@ -261,4 +262,10 @@ export function isTaskAvailableForCountry(
 
   // 4. Default case: if no allowlist is defined and not blocked, it's available
   return true;
+}
+
+export function getSHA(userId: string): string {
+  const shaObj = new jsSHA("SHA-256", "TEXT", {encoding: "UTF8"});
+  shaObj.update(userId);
+  return shaObj.getHash("HEX");
 }
