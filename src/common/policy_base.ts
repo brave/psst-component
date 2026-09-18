@@ -14,7 +14,7 @@ export interface PolicyScriptResult {
 }
 
 export abstract class PolicyScriptBase {
-  static readonly WAIT_FOR_PAGE_TIMEOUT = 2000;
+  static readonly WAIT_FOR_PAGE_TIMEOUT = 1000;
   static readonly WAIT_FOR_PAGE_ATTEMPTS_COUNT = 6;
 
   protected params: PolicyScriptInputData;
@@ -56,7 +56,6 @@ export abstract class PolicyScriptBase {
           modalSelector => normalizeModalSelector(
               modalSelector as ModalSelectorData | string | undefined) as
               ModalSelectorData);
-      if (__DEV__) logger.debug(`Task ${current_task?.description}`);
       await this.waitForSettingAppliedWithTimeout(
           selector, current_task?.turn_off ?? false, modal_selectors);
       moveCurrentTask(psstObj, undefined);

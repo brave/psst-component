@@ -10,23 +10,6 @@ import { waitForAttributeValue, waitForElement, type ModalSelectorData } from ".
 
 
 export class ChatGptPolicyScript extends PolicyScriptBase {
-    // Number of times to re-resolve a modal selector when the element
-    // `waitForElement` returned has been detached from the DOM by the time we
-    // are about to dispatch on it (e.g. a tab switch re-renders the target
-    // between resolution and dispatch).
-    private static readonly CLICK_STALE_ELEMENT_RETRIES = 3;
-
-    // Dispatching a bare 'pointerdown'/'mousedown' with no matching "up"/
-    // click can leave the page's own gesture or navigation-blocker state half
-    // -armed (observed live as a React Router "only one blocker at a time"
-    // error right before the next step's click was silently swallowed).
-    // Completing the natural event sequence for "down" events resolves that
-    // state before moving on, the same way it would after a real click.
-    private static readonly GESTURE_COMPLETIONS: Record<string, string[]> = {
-        pointerdown: ['pointerup', 'click'],
-        mousedown: ['mouseup', 'click'],
-    };
-
     async waitForSettingAppliedWithTimeout(selectorData: ModalSelectorData | undefined, turnOff: boolean, modalSelectors: ModalSelectorData[] | undefined): Promise<void> {
         const errors = await this.clickModalSelectors(modalSelectors);
 
@@ -56,7 +39,6 @@ export class ChatGptPolicyScript extends PolicyScriptBase {
 
           const wrappedReject = (errorDescription: string|null = null) => {
             attemptCount++;
-            if (__DEV__) logger.debug(`Attempt:${attemptCount}`);
             if (attemptCount >=
                 ChatGptPolicyScript.WAIT_FOR_PAGE_ATTEMPTS_COUNT) {
               reject(new Error(`Checkbox not found after ${
@@ -88,8 +70,8 @@ export class ChatGptPolicyScript extends PolicyScriptBase {
             if (__DEV__) logger.debug(`Run iteration: "${index + 1}/${modalSelectors.length}"`);
             if (modalSelector) {
                 try {
-                    if (__DEV__) logger.debug(`Run clickWhenConnected`);
-                    await this.clickWhenConnected(modalSelector);
+                    const element = await waitForElement(modalSelector.selector);
+                    element.dispatchEvent(new PointerEvent(modalSelector.event, {bubbles: true, cancelable: true, button: 0, pointerId: 1, pointerType: 'mouse', isPrimary: true}));
                 } catch (error) {
                     const errorMessage = `${index + 1}/${modalSelectors.length}: ${(error as Error).message}`;
                     if (__DEV__) logger.debug(errorMessage);
@@ -98,47 +80,6 @@ export class ChatGptPolicyScript extends PolicyScriptBase {
             }
         }
         return errors.length > 0 ? errors : undefined;
-    }
-
-    // waitForElement can resolve with an element from a transient render (e.g.
-    // a tab-switch re-render triggered by the previous modal selector) that
-    // gets replaced again before this coroutine's next line runs. Dispatching
-    // on that now-detached node is a silent no-op, so re-check `isConnected`
-    // right before dispatch and re-resolve the selector against the live DOM
-    // if it went stale.
-    private async clickWhenConnected(modalSelector: ModalSelectorData): Promise<void> {
-        for (let attempt = 1; attempt <= ChatGptPolicyScript.CLICK_STALE_ELEMENT_RETRIES; attempt++) {
-            const element = await waitForElement(modalSelector.selector);
-            if (element.isConnected) {
-                if (__DEV__) logger.debug(`Pre dispatchPointerEventSequence ${element}`);
-                await this.dispatchPointerEventSequence(element, modalSelector.event);
-                return;
-            }
-            if (__DEV__) logger.debug(`Element for selector "${modalSelector.selector}" went stale before dispatch (attempt ${attempt}/${ChatGptPolicyScript.CLICK_STALE_ELEMENT_RETRIES})`);
-        }
-        throw new Error(`Element for selector "${modalSelector.selector}" went stale before it could be clicked`);
-    }
-
-    // Deferring each dispatch to the next macrotask (rather than firing
-    // immediately after waitForElement resolves) gives a pending
-    // render/animation/effect from the previous step time to finish first -
-    // dispatching synchronously right after resolution was observed to
-    // silently no-op live on macOS Brave even though the element existed and
-    // was connected.
-    private async dispatchPointerEventSequence(element: HTMLElement, event: string): Promise<void> {
-        const options = {bubbles: true, cancelable: true, button: 0, pointerId: 1, pointerType: 'mouse', isPrimary: true};
-        await this.nextTick();
-        if (__DEV__) logger.debug(`dispatchPointerEventSequence event:${event} element:${element}`);
-        element.dispatchEvent(new PointerEvent(event, options));
-        for (const followUp of ChatGptPolicyScript.GESTURE_COMPLETIONS[event] ?? []) {
-            await this.nextTick();
-            if (__DEV__) logger.debug(`dispatchPointerEventSequence followUp event:"${followUp}"`);
-            element.dispatchEvent(new PointerEvent(followUp, options));
-        }
-    }
-
-    private nextTick(): Promise<void> {
-        return new Promise(resolve => setTimeout(resolve, 0));
     }
 
     private async checkCheckboxes(
@@ -151,7 +92,6 @@ export class ChatGptPolicyScript extends PolicyScriptBase {
       try {
         const element = await waitForElement(selectorData.selector);
 
-        if (__DEV__) logger.debug(`checkCheckboxes element:${element}`);
         const click =
             () => {
               element.dispatchEvent(new PointerEvent('click', {
@@ -172,7 +112,6 @@ export class ChatGptPolicyScript extends PolicyScriptBase {
         }
         resolve();
       } catch (error) {
-        if (__DEV__) logger.debug(`checkCheckboxes error:${error}`);
         reject((error as Error).message);
       }
     }

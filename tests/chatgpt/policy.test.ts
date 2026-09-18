@@ -70,17 +70,10 @@ describe('ChatGptPolicyScript.waitForSettingAppliedWithTimeout', () => {
         { selector: '#cb', event: 'click' }, true,
         [{ selector: '#step1', event: 'pointerdown' }, { selector: '#step2', event: 'click' }],
       );
-      // Each dispatch now defers by one macrotask (see dispatchPointerEventSequence's
-      // nextTick), so the exact number of chained 0ms timers isn't known up
-      // front - runAllTimersAsync drains all of them plus the regular polling
-      // timers, however many there turn out to be, instead of a fixed budget.
-      await vi.runAllTimersAsync();
+      await vi.advanceTimersByTimeAsync(TICK);
 
       await expect(promise).resolves.toBeUndefined();
-      // step1 is a 'pointerdown' step, which is completed with a trailing
-      // pointerup + click (see GESTURE_COMPLETIONS) so the page's own gesture
-      // handling doesn't get left half-armed.
-      expect(step1.events).toEqual(['pointerdown', 'click']);
+      expect(step1.events).toEqual(['pointerdown']);
       expect(step2.events).toEqual(['click']);
       expect(order).toEqual(['step1', 'step2']);
     });
@@ -96,24 +89,10 @@ describe('ChatGptPolicyScript.waitForSettingAppliedWithTimeout', () => {
         { selector: '#cb', event: 'click' }, true,
         [{ selector: '#late', event: 'pointerdown' }],
       );
-      await vi.runAllTimersAsync();
+      await vi.advanceTimersByTimeAsync(3000);
 
       await expect(promise).resolves.toBeUndefined();
-      expect(target?.events).toEqual(['pointerdown', 'click']);
-    });
-
-    it('completes a mousedown step with a trailing mouseup + click', async () => {
-      const step = appendClickTarget('mousedown-step');
-      appendAriaCheckedElement('cb', false);
-
-      const promise = instance.waitForSettingAppliedWithTimeout(
-        { selector: '#cb', event: 'click' }, true,
-        [{ selector: '#mousedown-step', event: 'mousedown' }],
-      );
-      await vi.runAllTimersAsync();
-
-      await expect(promise).resolves.toBeUndefined();
-      expect(step.events).toEqual(['mousedown', 'click']);
+      expect(target?.events).toEqual(['pointerdown']);
     });
 
     it('rejects with "Modal selectors error" and never touches the toggle when a modal selector never appears', async () => {
@@ -149,51 +128,6 @@ describe('ChatGptPolicyScript.waitForSettingAppliedWithTimeout', () => {
 
       await assertion;
       expect(found.events).toEqual(['click']);
-    });
-  });
-
-  describe('modal selector element goes stale before dispatch', () => {
-    // Regression test: a modal selector step can trigger a re-render (e.g. a
-    // tab switch) that replaces the element waitForElement just resolved
-    // before this coroutine gets to dispatch on it. Dispatching on that
-    // now-detached node is a silent no-op, so clickWhenConnected must re-check
-    // isConnected and re-resolve the selector against the live DOM instead.
-    function clickWhenConnected(target: ChatGptPolicyScript, modalSelector: { selector: string; event: string }) {
-      return (target as unknown as { clickWhenConnected(m: { selector: string; event: string }): Promise<void> })
-        .clickWhenConnected(modalSelector);
-    }
-
-    it('re-resolves the selector against the live DOM when the found element has gone stale', async () => {
-      const stale = appendClickTarget('flaky');
-      Object.defineProperty(stale.element, 'isConnected', { value: false });
-
-      const promise = clickWhenConnected(instance, { selector: '#flaky', event: 'click' });
-
-      // Swap the stale element for a fresh, genuinely connected one before
-      // the retry's waitForElement call runs (that only happens once this
-      // synchronous block finishes and pending microtasks are flushed).
-      stale.element.remove();
-      const fresh = appendClickTarget('flaky');
-
-      // The retry's dispatch defers by one macrotask (dispatchPointerEventSequence's
-      // nextTick), so drain fake timers before awaiting the result.
-      await vi.runAllTimersAsync();
-      await promise;
-
-      expect(stale.events).toEqual([]);
-      expect(fresh.events).toEqual(['click']);
-    });
-
-    it('throws once the modal selector element keeps going stale across every retry', async () => {
-      const alwaysStale = appendClickTarget('flaky');
-      Object.defineProperty(alwaysStale.element, 'isConnected', { value: false });
-
-      const promise = clickWhenConnected(instance, { selector: '#flaky', event: 'click' });
-
-      await expect(promise).rejects.toThrow(
-        'Element for selector "#flaky" went stale before it could be clicked',
-      );
-      expect(alwaysStale.events).toEqual([]);
     });
   });
 
@@ -426,7 +360,7 @@ describe('ChatGptPolicyScript.waitForSettingAppliedWithTimeout', () => {
       dom.openModalButtonLabel.addEventListener('click', () => order.push('open-modal'));
 
       const promise = instance.waitForSettingAppliedWithTimeout(task.selector, task.turn_off, task.modal_selectors);
-      await vi.runAllTimersAsync();
+      await vi.advanceTimersByTimeAsync(TICK);
 
       await expect(promise).resolves.toBeUndefined();
       expect(order).toEqual(['profile', 'settings', 'data-controls', 'open-modal']);
