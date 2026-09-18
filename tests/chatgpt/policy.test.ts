@@ -74,7 +74,10 @@ describe('ChatGptPolicyScript.waitForSettingAppliedWithTimeout', () => {
 
       await expect(promise).resolves.toBeUndefined();
       expect(step1.events).toEqual(['pointerdown']);
-      expect(step2.events).toEqual(['click']);
+      // 'click' steps go through the Radix-style pointerdown/pointerup/click
+      // sequence dispatched by dispatchRealisticClick; pointerup isn't among
+      // the event types appendClickTarget records.
+      expect(step2.events).toEqual(['pointerdown', 'click']);
       expect(order).toEqual(['step1', 'step2']);
     });
 
@@ -127,7 +130,9 @@ describe('ChatGptPolicyScript.waitForSettingAppliedWithTimeout', () => {
       await vi.advanceTimersByTimeAsync(ELEMENT_TIMEOUT);
 
       await assertion;
-      expect(found.events).toEqual(['click']);
+      // See the comment above on the 'dispatches the configured event...'
+      // test: a 'click' step dispatches pointerdown+pointerup+click.
+      expect(found.events).toEqual(['pointerdown', 'click']);
     });
   });
 
