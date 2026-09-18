@@ -70,7 +70,3 @@ window.PolicyScriptInstance = new LinkedInPolicyScript();
 // See user.ts / webpack.config.js: the bundle's value is exposed through a
 // default export, not a trailing IIFE (webpack's wrappers swallow `return`).
 export default window.PolicyScriptInstance.applyPolicies();
-
-function waitForElementNoExceptions(targetSelector: string) {
-    throw new Error("Function not implemented.");
-}
