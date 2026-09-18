@@ -15,7 +15,7 @@ const CACHE_COOKIE_NAME = 'psst_linkedin_uid';
 
 /** Marks the page as signed in, the way LinkedIn's own app state does. */
 function markSignedIn() {
-  sessionStorage.setItem(SIGNED_USER_LS_KEY_NAME, '1');
+  localStorage.setItem(SIGNED_USER_LS_KEY_NAME, '1');
 }
 
 /** Builds the encoded cache cookie value getUserId()/readCachedUid() expect. */
@@ -34,6 +34,7 @@ function appendProfileLink(href: string): HTMLAnchorElement {
 describe('LinkedinUserScript.getUserId', () => {
   beforeEach(() => {
     sessionStorage.clear();
+    localStorage.clear();
     document.body.innerHTML = '';
   });
 
@@ -51,8 +52,8 @@ describe('LinkedinUserScript.getUserId', () => {
       expect(writeSpy).toHaveBeenCalledWith(`${CACHE_COOKIE_NAME}=; max-age=0; path=/`);
     });
 
-    it('treats unrelated sessionStorage keys as not signed in', () => {
-      sessionStorage.setItem('some_other_key', '1');
+    it('treats unrelated localStorage keys as not signed in', () => {
+      localStorage.setItem('some_other_key', '1');
       mockDocumentCookie('');
 
       const instance = new LinkedinUserScript();
@@ -145,6 +146,7 @@ describe('LinkedinUserScript.getUserId', () => {
 describe('LinkedinUserScript.getTasks', () => {
   beforeEach(() => {
     sessionStorage.clear();
+    localStorage.clear();
     document.body.innerHTML = '';
   });
 

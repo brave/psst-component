@@ -5,11 +5,16 @@
 // You can obtain one at https://mozilla.org/MPL/2.0/
 
 import { PolicyScriptBase } from "../common/policy_base";
-import type { ModalSelectorData } from "../common/psst_utils";
+import { waitForElementWithRetry, type ModalSelectorData } from "../common/psst_utils";
 
 
 export class LinkedInPolicyScript extends PolicyScriptBase {
-    waitForSettingAppliedWithTimeout(selectorData: ModalSelectorData | undefined, turnOff: boolean, modalSelectors: ModalSelectorData[] | undefined): Promise<void> {
+    async waitForSettingAppliedWithTimeout(selectorData: ModalSelectorData | undefined, turnOff: boolean, modalSelectors: ModalSelectorData[] | undefined): Promise<void> {
+        const targetSelector = selectorData?.selector;
+        if (targetSelector) {
+            await waitForElementWithRetry(targetSelector);
+        }
+        
         return new Promise((resolve, reject) => {
             let intervalId: number | null = null;
             let attemptCount = 0;

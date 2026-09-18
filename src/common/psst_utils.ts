@@ -108,6 +108,21 @@ const getProcessedTasks = (psst: PsstData|undefined) => {
   return psst?.applied_tasks?.length ?? 0;
 };
 
+export async function waitForElementWithRetry(
+    selector: string, count: number = 20, timeout: number = 500) {
+  let opened = false;
+  for (let retry = 0; retry < count && !opened; retry++) {
+    try {
+      await waitForElement(selector, timeout);
+      opened = true;
+    } catch {
+      if (__DEV__)
+        logger.debug(
+            `waitForElementWithRetry retry ${retry + 1}: element:${selector} not up yet, retrying`);
+    }
+  }
+}
+
 /**
  * Waits for an element matching the selector to appear in the DOM.
  * Uses MutationObserver for efficiency, falling back to a timeout if not found.
@@ -128,22 +143,26 @@ export async function waitForElement(
       return resolve(element);
     }
 
+    let timer: ReturnType<typeof setTimeout>;
+    const root = document.documentElement ?? document;
+
     // If not found, set up an observer
     const observer = new MutationObserver((mutations, obs) => {
-      const el = document.querySelector<HTMLElement>(selector);
+      const el = root.querySelector<HTMLElement>(selector);
       if (el) {
         obs.disconnect();
+        clearTimeout(timer);
         resolve(el);
       }
     });
 
-    observer.observe(document.body, {
+    observer.observe(root, {
       childList: true,
       subtree: true,
     });
 
     // Timeout fallback
-    setTimeout(() => {
+    timer = setTimeout(() => {
       observer.disconnect();
       reject(new Error(`The element not found within timeout`));
     }, timeout);
