@@ -2,9 +2,7 @@ name: Security Audit
 
 on:
   pull_request:
-    paths:
-      - 'package.json'
-      - 'package-lock.json'
+    types: [opened, synchronize, reopened]
   schedule:
     - cron: '0 8 * * 1'
   workflow_dispatch:
