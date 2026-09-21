@@ -3,8 +3,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
-import { describe, it, expect } from 'vitest';
-import { isTaskAvailableForCountry } from '../../src/common/psst_utils';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { isInitialExecution, isTaskAvailableForCountry, PSST_STORAGE_KEY, PsstState } from '../../src/common/psst_utils';
 import type { Task } from '../../src/common/psst_utils';
 
 const makeTask = (overrides: Partial<Task> = {}): Task => ({
@@ -76,5 +76,94 @@ describe('isTaskAvailableForCountry', () => {
     const task = makeTask({ available_for_countries: ['us'] });
 
     expect(isTaskAvailableForCountry(task, ' us ')).toBe(true);
+  });
+});
+
+describe('isInitialExecution', () => {
+  // jsdom's default test URL (see vitest.config.ts jsdom environment).
+  const CURRENT_URL = window.location.href;
+
+  const storeStartedFlow = (overrides: Record<string, unknown> = {}) => {
+    sessionStorage.setItem(PSST_STORAGE_KEY, JSON.stringify({
+      state: PsstState.STARTED,
+      updated_at: Date.now(),
+      start_url: CURRENT_URL,
+      ...overrides
+    }));
+  };
+
+  beforeEach(() => {
+    sessionStorage.clear();
+  });
+
+  afterEach(() => {
+    sessionStorage.clear();
+  });
+
+  it('returns false for an active flow on its expected start_url', () => {
+    storeStartedFlow();
+
+    expect(isInitialExecution()).toBe(false);
+  });
+
+  it('returns false for an active flow whose current_task.url matches the current page', () => {
+    // start_url deliberately points elsewhere: current_task should take
+    // precedence over it when both are present.
+    storeStartedFlow({
+      start_url: 'https://example.com/unrelated-start-page',
+      current_task: makeTask({ url: CURRENT_URL })
+    });
+
+    expect(isInitialExecution()).toBe(false);
+  });
+
+  it('returns true when current_task.url points elsewhere even though start_url matches', () => {
+    // current_task takes precedence over a matching start_url, so a stale
+    // current_task still forces a restart.
+    storeStartedFlow({
+      start_url: CURRENT_URL,
+      current_task: makeTask({ url: 'https://example.com/some-other-step' })
+    });
+
+    expect(isInitialExecution()).toBe(true);
+  });
+
+  it('returns true when the stored flow has expired', () => {
+    // Well beyond the staleness window, regardless of its exact value.
+    storeStartedFlow({ updated_at: Date.now() - 60_000 });
+
+    expect(isInitialExecution()).toBe(true);
+  });
+
+  it('returns false when the stored flow is recent', () => {
+    // Well within the staleness window.
+    storeStartedFlow({ updated_at: Date.now() - 1_000 });
+
+    expect(isInitialExecution()).toBe(false);
+  });
+
+  it('returns true when updated_at is missing', () => {
+    const { updated_at, ...withoutUpdatedAt } = { updated_at: Date.now(), state: PsstState.STARTED, start_url: CURRENT_URL };
+    sessionStorage.setItem(PSST_STORAGE_KEY, JSON.stringify(withoutUpdatedAt));
+
+    expect(isInitialExecution()).toBe(true);
+  });
+
+  it('returns true when the stored pathname differs from the current page', () => {
+    storeStartedFlow({ start_url: new URL('/other-page', CURRENT_URL).toString() });
+
+    expect(isInitialExecution()).toBe(true);
+  });
+
+  it('returns true when the stored origin differs from the current page', () => {
+    storeStartedFlow({ start_url: 'https://malicious.example/' });
+
+    expect(isInitialExecution()).toBe(true);
+  });
+
+  it('returns true when neither current_task.url nor start_url is set', () => {
+    storeStartedFlow({ start_url: '' });
+
+    expect(isInitialExecution()).toBe(true);
   });
 });
