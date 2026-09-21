@@ -13,10 +13,10 @@ const TICK = PolicyScriptBase.WAIT_FOR_PAGE_TIMEOUT;
 const SELECTOR = { selector: '#toggle', event: 'click' };
 
 // waitForSettingAppliedWithTimeout first awaits waitForElementWithRetry
-// (src/common/psst_utils.ts), which retries up to 20 times with a 500ms
+// (src/common/psst_utils.ts), which retries up to 16 times with a 500ms
 // timeout each when the selector never matches anything, before the
 // interval-based polling loop below even starts.
-const ELEMENT_RETRY_COUNT = 20;
+const ELEMENT_RETRY_COUNT = 16;
 const ELEMENT_RETRY_TIMEOUT = 500;
 const PRE_WAIT_DURATION = ELEMENT_RETRY_COUNT * ELEMENT_RETRY_TIMEOUT;
 
