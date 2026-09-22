@@ -14,14 +14,18 @@ const TICK = PolicyScriptBase.WAIT_FOR_PAGE_TIMEOUT;
 // Default timeouts baked into waitForElement/waitForAttributeValue
 // (src/common/psst_utils.ts) - not exported, so mirrored here.
 const ELEMENT_TIMEOUT = 5000;
-const ATTRIBUTE_TIMEOUT = 2000;
 
 // Each attempt now runs to completion (poll wait + however long
 // checkCheckboxes itself takes) before the next one is scheduled, so the
 // total time to exhaust all attempts is ATTEMPTS * (TICK + per-attempt work),
 // not ATTEMPTS * TICK plus a single trailing timeout.
-const REJECT_AFTER_ELEMENT_NEVER_FOUND = ATTEMPTS * (TICK + ELEMENT_TIMEOUT);
-const REJECT_AFTER_ATTRIBUTE_NEVER_FLIPS = ATTEMPTS * (TICK + ATTRIBUTE_TIMEOUT);
+// checkCheckboxes forwards WAIT_FOR_PAGE_TIMEOUT (TICK) as the explicit
+// timeout to both waitForElement and waitForAttributeValue, so the
+// per-attempt work is bounded by TICK rather than by their own
+// ELEMENT_TIMEOUT/ATTRIBUTE_TIMEOUT defaults (those still apply to the
+// modal-selector clicks tested below, which don't pass an explicit timeout).
+const REJECT_AFTER_ELEMENT_NEVER_FOUND = ATTEMPTS * (TICK + TICK);
+const REJECT_AFTER_ATTRIBUTE_NEVER_FLIPS = ATTEMPTS * (TICK + TICK);
 const REJECT_AFTER_NO_SELECTOR = ATTEMPTS * TICK;
 
 describe('ChatGptPolicyScript.waitForSettingAppliedWithTimeout', () => {
@@ -253,7 +257,7 @@ describe('ChatGptPolicyScript.waitForSettingAppliedWithTimeout', () => {
 
       const promise = instance.waitForSettingAppliedWithTimeout({ selector: '#cb', event: 'click' }, true, undefined);
       const assertion = expect(promise).rejects.toThrow(
-        `Checkbox not found after ${ATTEMPTS} attempts. Error: Attribute "aria-checked" did not become "false" within ${ATTRIBUTE_TIMEOUT}ms`,
+        `Checkbox not found after ${ATTEMPTS} attempts. Error: Attribute "aria-checked" did not become "false" within ${TICK}ms`,
       );
       await vi.advanceTimersByTimeAsync(REJECT_AFTER_ATTRIBUTE_NEVER_FLIPS);
 

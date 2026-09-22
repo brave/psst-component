@@ -43,10 +43,9 @@ export interface PsstData {
 
 export const PSST_STORAGE_KEY = 'psst';
 /**
- * Maximum age of a `STARTED` flow before we treat it as broken. Generous
- * relative to the per-step waits (~1s timeout × 6 attempts in policy.ts).
+ * Maximum age of a `STARTED` flow before we treat it as broken.
  */
-const PSST_STALE_MS = 30_000;
+const PSST_STALE_MS = 40_000;
 
 const isOnExpectedStep =
     (psst: Pick<PsstData, 'current_task'|'start_url'>): boolean => {
