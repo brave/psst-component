@@ -142,6 +142,13 @@ describe('isInitialExecution', () => {
     expect(isInitialExecution()).toBe(false);
   });
 
+  it('returns true when updated_at is in the future', () => {
+    // A future timestamp must not be treated as fresh indefinitely.
+    storeStartedFlow({ updated_at: Date.now() + 60_000 });
+
+    expect(isInitialExecution()).toBe(true);
+  });
+
   it('returns true when updated_at is missing', () => {
     const { updated_at, ...withoutUpdatedAt } = { updated_at: Date.now(), state: PsstState.STARTED, start_url: CURRENT_URL };
     sessionStorage.setItem(PSST_STORAGE_KEY, JSON.stringify(withoutUpdatedAt));

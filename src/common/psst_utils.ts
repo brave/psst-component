@@ -86,8 +86,10 @@ export const isInitialExecution =
         // Broken-flow detection: an active run must be recent AND on the step
         // it was driven to. Otherwise it was interrupted, so restart from
         // scratch.
-        const isNotExpired = typeof parsed.updated_at === 'number' &&
-            (Date.now() - parsed.updated_at) <= PSST_STALE_MS;
+        const age = typeof parsed.updated_at === 'number' ?
+            Date.now() - parsed.updated_at :
+            NaN;
+        const isNotExpired = age >= 0 && age <= PSST_STALE_MS;
 
         const onExpectedStep = isOnExpectedStep({
           current_task: parsed.current_task,
