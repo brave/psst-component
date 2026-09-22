@@ -60,7 +60,8 @@ export class ChatGptPolicyScript extends PolicyScriptBase {
       const scheduleNextAttempt = () => {
         timeoutId = setTimeout(() => {
           this.checkCheckboxes(
-              wrappedResolve, wrappedReject, selectorData, turnOff);
+              wrappedResolve, wrappedReject, selectorData, turnOff,
+              ChatGptPolicyScript.WAIT_FOR_PAGE_TIMEOUT);
         }, ChatGptPolicyScript.WAIT_FOR_PAGE_TIMEOUT);
       };
 
@@ -114,13 +115,13 @@ export class ChatGptPolicyScript extends PolicyScriptBase {
 
   private async checkCheckboxes(
       resolve: () => void, reject: (errorDescription: string|null) => void,
-      selectorData: ModalSelectorData|undefined, turnOff: boolean) {
+      selectorData: ModalSelectorData|undefined, turnOff: boolean, timeout: number) {
     if (!selectorData) {
       reject('No selector provided');
       return;
     }
     try {
-      const element = await waitForElement(selectorData.selector);
+      const element = await waitForElement(selectorData.selector, timeout);
 
       const click =
           () => {
@@ -138,7 +139,7 @@ export class ChatGptPolicyScript extends PolicyScriptBase {
       const isChecked = element.getAttribute('aria-checked') === 'true';
       if ((turnOff && isChecked) || (!turnOff && !isChecked)) {
         click();
-        await waitForAttributeValue(element, 'aria-checked', target);
+        await waitForAttributeValue(element, 'aria-checked', target, timeout);
       }
       resolve();
     } catch (error) {

@@ -117,8 +117,11 @@ export abstract class PolicyScriptBase {
 
   protected savePsstDataToStorage(psstData: PsstData): void {
     try {
-      if (__DEV__) logger.info('Saving PsstData to sessionStorage:', JSON.stringify(psstData));
-      sessionStorage.setItem(PSST_STORAGE_KEY, JSON.stringify(psstData));
+      if (__DEV__) logger.info('Saving PsstData:', JSON.stringify(psstData));
+      sessionStorage.setItem(PSST_STORAGE_KEY, JSON.stringify({
+        ...psstData,
+        updated_at: Date.now(),
+      }));
     } catch (error) {
       if (__DEV__) logger.error('Failed to save PsstData to sessionStorage:', error);
     }

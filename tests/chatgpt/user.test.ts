@@ -207,7 +207,11 @@ describe('ChatgptUserScript.getTasks', () => {
   it('sets initial_execution to false when psst state is STARTED', () => {
     mockDocumentCookie(authInfoCookie('Ada Lovelace'));
     mockQuerySelector(null);
-    sessionStorage.setItem(PSST_STORAGE_KEY, JSON.stringify({ state: PsstState.STARTED }));
+    sessionStorage.setItem(PSST_STORAGE_KEY, JSON.stringify({
+      state: PsstState.STARTED,
+      start_url: window.location.href,
+      updated_at: Date.now(),
+    }));
 
     const instance = new ChatgptUserScript();
     const data = instance.getTasks() as UserScriptData;

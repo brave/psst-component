@@ -38,9 +38,29 @@ export interface PsstData {
   start_url: string;
   state: PsstState;
   tasks_list: Task[];
+  updated_at?: number;
 }
 
 export const PSST_STORAGE_KEY = 'psst';
+/**
+ * Maximum age of a `STARTED` flow before we treat it as broken.
+ */
+const PSST_STALE_MS = 40_000;
+
+const isOnExpectedStep =
+    (psst: Pick<PsstData, 'current_task'|'start_url'>): boolean => {
+      const expected = psst.current_task?.url || psst.start_url || undefined;
+      if (!expected) {
+        return false;
+      }
+      try {
+        const target = new URL(expected, location.href);
+        return target.origin === location.origin &&
+            target.pathname === location.pathname;
+      } catch {
+        return false;
+      }
+    };
 
 export const isInitialExecution =
     () => {
@@ -54,9 +74,36 @@ export const isInitialExecution =
       }
 
       try {
-        const parsed: unknown = JSON.parse(stored);
-        const state = (parsed as {state?: unknown} | null | undefined)?.state;
-        return state !== PsstState.STARTED;
+        const parsed =
+            JSON.parse(stored) as Partial<PsstData>| null | undefined;
+
+        // Not an active run (completed, missing, or unknown state) → start
+        // fresh flow.
+        if (parsed?.state !== PsstState.STARTED) {
+          return true;
+        }
+
+        // Broken-flow detection: an active run must be recent AND on the step
+        // it was driven to. Otherwise it was interrupted, so restart from
+        // scratch.
+        const age = typeof parsed.updated_at === 'number' ?
+            Date.now() - parsed.updated_at :
+            NaN;
+        const isNotExpired = age >= 0 && age <= PSST_STALE_MS;
+
+        const onExpectedStep = isOnExpectedStep({
+          current_task: parsed.current_task,
+          start_url: parsed.start_url ?? '',
+        });
+
+        if (!isNotExpired || !onExpectedStep) {
+          if (__DEV__)
+            logger.debug(`Detected broken PSST flow; expired:${
+                !isNotExpired} wrong step: ${!onExpectedStep}`);
+          return true;
+        }
+
+        return false;
       } catch (error) {
         if (__DEV__)
           logger.error('Failed to parse PsstData from sessionStorage:', error);
@@ -109,7 +156,7 @@ const getProcessedTasks = (psst: PsstData|undefined) => {
 };
 
 export async function waitForElementWithRetry(
-    selector: string, count: number = 20, timeout: number = 500) {
+    selector: string, count: number = 16, timeout: number = 500) {
   let opened = false;
   for (let retry = 0; retry < count && !opened; retry++) {
     try {
