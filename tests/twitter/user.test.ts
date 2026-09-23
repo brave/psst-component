@@ -6,7 +6,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import type { UserScriptData } from '../../src/common/declarations';
 import type { Task } from '../../src/common/psst_utils';
-import { PSST_STORAGE_KEY, PsstState } from '../../src/common/psst_utils';
+import { PSST_STORAGE_KEY, PsstState, getSHA } from '../../src/common/psst_utils';
 import { TwitterUserScript } from '../../src/twitter/user';
 import { mockDocumentCookie } from '../common/dom_mocks';
 
@@ -83,7 +83,7 @@ describe('TwitterUserScript.getTasks', () => {
     const data = instance.getTasks() as UserScriptData;
 
     expect(data).toBeDefined();
-    expect(data).toHaveProperty('user_id', 'test_user');
+    expect(data).toHaveProperty('user_id', getSHA('test_user'));
     expect(data).toHaveProperty('share_experience_link', 'https://x.com/intent/post?text=$1');
     expect(data).toHaveProperty('site_name', 'x.com');
     expect(data).toHaveProperty('tasks');
@@ -131,12 +131,13 @@ describe('TwitterUserScript.getTasks', () => {
     expect(uids.length).toBe(new Set(uids).size);
   });
 
-  it('propagates getUserId result into user_id', () => {
+  it('propagates the hashed getUserId result into user_id', () => {
     mockDocumentCookie(`${TWID_COOKIE_NAME}=test_user`);
 
     const instance = new TwitterUserScript();
     const data = instance.getTasks() as UserScriptData;
-    expect(data.user_id).toBe(instance.getUserId());
+    expect(data.user_id).toBe(getSHA(instance.getUserId()!));
+    expect(data.user_id).not.toBe(instance.getUserId());
   });
 
   it('sets initial_execution to true when no psst state is stored', () => {
