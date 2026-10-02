@@ -5,7 +5,16 @@
 
 import type {PolicyScriptInputData} from './declarations';
 import {logger} from './logger';
-import {calculateProgress, type ModalSelectorData, moveCurrentTask, normalizeModalSelector, PSST_STORAGE_KEY, type PsstData, PsstState, type Task} from './psst_utils';
+import {
+  calculateProgress,
+  type ModalSelectorData,
+  moveCurrentTask,
+  normalizeModalSelector,
+  PSST_STORAGE_KEY,
+  type PsstData,
+  PsstState,
+  type Task
+} from './psst_utils';
 
 
 export interface PolicyScriptResult {
@@ -23,11 +32,14 @@ export abstract class PolicyScriptBase {
     this.params = this.parseParams();
   }
 
-    abstract waitForSettingAppliedWithTimeout(selector: ModalSelectorData | undefined, turn_off: boolean, modal_selectors: ModalSelectorData[] | undefined): Promise<void>;
+  abstract waitForSettingAppliedWithTimeout(
+      selector: ModalSelectorData|undefined, turn_off: boolean,
+      modal_selectors: ModalSelectorData[]|undefined): Promise<void>;
 
   async applyPolicies(): Promise<PolicyScriptResult> {
     if (__DEV__)
-      logger.info('Starting applyPolicies with params:', JSON.stringify(this.params));
+      logger.info(
+          'Starting applyPolicies with params:', JSON.stringify(this.params));
     const psstObj = this.loadPsstDataFromStorage();
     if (!psstObj || this.getParams().initial_execution) {
       const firstTask = this.getParams().tasks[0];
@@ -54,8 +66,8 @@ export abstract class PolicyScriptBase {
           current_task?.selector as ModalSelectorData | string | undefined);
       const modal_selectors = current_task?.modal_selectors?.map(
           modalSelector => normalizeModalSelector(
-              modalSelector as ModalSelectorData | string | undefined) as
-              ModalSelectorData);
+                               modalSelector as ModalSelectorData | string |
+                               undefined) as ModalSelectorData);
       await this.waitForSettingAppliedWithTimeout(
           selector, current_task?.turn_off ?? false, modal_selectors);
       moveCurrentTask(psstObj, undefined);
@@ -139,11 +151,14 @@ export abstract class PolicyScriptBase {
   private parseParams(): PolicyScriptInputData {
     // The host assigns `window.__bravePsstParams` before injecting the bundle,
     // older hosts instead inject `params`
-    const hostParams = typeof window !== 'undefined' ? window.__bravePsstParams : undefined;
+    const hostParams =
+        typeof window !== 'undefined' ? window.__bravePsstParams : undefined;
     const legacyParams = typeof params !== 'undefined' ? params : undefined;
     const rawParams = hostParams ?? legacyParams ?? '{}';
     if (__DEV__)
-      logger.debug('Parsing PolicyScriptInputData from params:', JSON.stringify(rawParams));
+      logger.debug(
+          'Parsing PolicyScriptInputData from params:',
+          JSON.stringify(rawParams));
     const parsed =
         typeof rawParams === 'string' ? JSON.parse(rawParams) : rawParams;
 
