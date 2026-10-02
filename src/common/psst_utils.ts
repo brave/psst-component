@@ -55,9 +55,32 @@ const isOnExpectedStep =
       }
       try {
         const target = new URL(expected, location.href);
-        return target.origin === location.origin &&
+        const onExactStep = target.origin === location.origin &&
             target.pathname === location.pathname;
-      } catch {
+        if (__DEV__)
+          logger.debug(`isOnExpectedStep expected:${expected} target:${target} param1:${(target.origin === location.origin)} param2:${(target.pathname === location.pathname)} target.pathname:${target.pathname} location.pathname:${location.pathname}`);
+
+        if (onExactStep || target.origin !== location.origin ||
+            !psst.current_task) {
+          return onExactStep;
+        }
+
+        // Same-origin mismatch while a task is active: the host navigated us
+        // here to drive current_task, but the site redirected elsewhere
+        // (e.g. an unavailable-page fallback). Only treat this as a broken
+        // flow if we've regressed back to the flow's start page; otherwise
+        // let applyPolicies()'s own per-task timeout decide whether to skip
+        // this task, instead of restarting the whole flow from scratch.
+        if (!psst.start_url) {
+          return true;
+        }
+        const start = new URL(psst.start_url, location.href);
+        const regressedToStart = start.origin === location.origin &&
+            start.pathname === location.pathname;
+        return !regressedToStart;
+      } catch (error) {
+        if (__DEV__)
+          logger.debug(`isOnExpectedStep failed:${error}`);
         return false;
       }
     };
