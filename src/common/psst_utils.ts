@@ -58,10 +58,17 @@ const isOnExpectedStep =
         const onExactStep = target.origin === location.origin &&
             target.pathname === location.pathname;
         if (__DEV__)
-          logger.debug(`isOnExpectedStep expected:${expected} target:${target} param1:${(target.origin === location.origin)} param2:${(target.pathname === location.pathname)} target.pathname:${target.pathname} location.pathname:${location.pathname}`);
+          logger.debug(`isOnExpectedStep 100 \n\texpected:${
+              expected} \n\tonExactStep:${onExactStep} \n\ttarget:${
+              target} \n\tlocation:${location} \n\tparam1:${
+              (target.origin === location.origin)} \n\tparam2:${
+              (target.pathname === location.pathname)} \n\ttarget.pathname:${
+              target.pathname} \n\tlocation.pathname:${location.pathname}`);
 
         if (onExactStep || target.origin !== location.origin ||
             !psst.current_task) {
+          if (__DEV__)
+            logger.debug(`isOnExpectedStep 200 \n\tonExactStep:${onExactStep} ${target.origin !== location.origin} ${!psst.current_task}`);
           return onExactStep;
         }
 
@@ -77,6 +84,8 @@ const isOnExpectedStep =
         const start = new URL(psst.start_url, location.href);
         const regressedToStart = start.origin === location.origin &&
             start.pathname === location.pathname;
+        if (__DEV__)
+          logger.debug(`isOnExpectedStep 300 \n\tonExactStep:${onExactStep} ${target.origin !== location.origin} ${!psst.current_task}`);
         return !regressedToStart;
       } catch (error) {
         if (__DEV__)
@@ -88,11 +97,15 @@ const isOnExpectedStep =
 export const isInitialExecution =
     () => {
       if (typeof sessionStorage === 'undefined') {
+        if (__DEV__)
+          logger.debug(`isInitialExecution 100 true`);
         return true;
       }
 
       const stored = sessionStorage.getItem(PSST_STORAGE_KEY);
       if (stored === null) {
+        if (__DEV__)
+          logger.debug(`isInitialExecution 200 true`);
         return true;
       }
 
@@ -103,6 +116,8 @@ export const isInitialExecution =
         // Not an active run (completed, missing, or unknown state) → start
         // fresh flow.
         if (parsed?.state !== PsstState.STARTED) {
+          if (__DEV__)
+            logger.debug(`isInitialExecution 300 true`);
           return true;
         }
 
