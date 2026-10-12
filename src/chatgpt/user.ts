@@ -458,7 +458,7 @@ const getPliUserId = (): string | undefined => {
 };
 
 export class ChatgptUserScript extends UserScriptBase {
-    readonly version = 5;
+    readonly version = 6;
     readonly includeUrlPatterns: string[] = ['https://chatgpt.com/*'];
     readonly excludeUrlPatterns: string[] = [];
     readonly userScript: string = 'user.js';
