@@ -307,41 +307,16 @@ describe('ChatGptPolicyScript.waitForSettingAppliedWithTimeout', () => {
 
   describe('end-to-end with the real chatgpt.com task definition', () => {
     /**
-     * Builds a minimal DOM mirroring the real page structure targeted by the
-     * "Disable Improve the model for everyone" task in src/chatgpt/user.ts,
-     * so the modal_selectors chain from the real ChatgptUserScript output
-     * drives real MutationObserver-based waits end to end.
+     * The current "Disable Improve the model for everyone" task (see
+     * TOGGLE_LABELS/selectorFor in src/chatgpt/user.ts) targets the switch
+     * directly via its aria-label - there's no modal to open first, so
+     * modal_selectors is undefined and this DOM mirrors just the switch.
      */
-    function buildRealChatgptSettingsDom() {
-      const profileButton = document.createElement('div');
-      profileButton.setAttribute('data-testid', 'accounts-profile-button');
-      const profileButtonInner = document.createElement('div');
-      profileButtonInner.className = 'flex min-w-0 items-center gap-2';
-      profileButton.appendChild(profileButtonInner);
-      document.body.appendChild(profileButton);
-
-      const settingsMenuItem = document.createElement('div');
-      settingsMenuItem.setAttribute('data-testid', 'settings-menu-item');
-      document.body.appendChild(settingsMenuItem);
-
-      const dataControlsTab = document.createElement('div');
-      dataControlsTab.setAttribute('data-testid', 'data-controls-tab');
-      const dataControlsInner = document.createElement('div');
-      dataControlsInner.className = 'min-w-0';
-      const dataControlsLeaf = document.createElement('div');
-      dataControlsInner.appendChild(dataControlsLeaf);
-      dataControlsTab.appendChild(dataControlsInner);
-      document.body.appendChild(dataControlsTab);
-
-      const openModalButton = document.createElement('button');
-      openModalButton.setAttribute('data-testid', 'improve-model-open-modal-button');
-      const openModalButtonLabel = document.createElement('div');
-      openModalButtonLabel.className = 'ps-3';
-      openModalButton.appendChild(openModalButtonLabel);
-      document.body.appendChild(openModalButton);
-
+    function buildRealChatgptToggleDom() {
       const toggle = document.createElement('button');
-      toggle.setAttribute('data-testid', 'improve-model-toggle');
+      toggle.setAttribute('type', 'button');
+      toggle.setAttribute('role', 'switch');
+      toggle.setAttribute('aria-label', 'Allow chats to improve the model for everyone');
       toggle.setAttribute('aria-checked', 'true');
       toggle.addEventListener('click', () => {
         const current = toggle.getAttribute('aria-checked') === 'true';
@@ -349,30 +324,25 @@ describe('ChatGptPolicyScript.waitForSettingAppliedWithTimeout', () => {
       });
       document.body.appendChild(toggle);
 
-      return { profileButtonInner, settingsMenuItem, dataControlsLeaf, openModalButtonLabel, toggle };
+      return { toggle };
     }
 
-    it('walks all 4 modal steps in order and turns the toggle off', async () => {
+    it('turns the toggle off directly, with no modal steps', async () => {
       // getSiteScriptData() is DOM-free (it's a static task description), so
       // no document.cookie/querySelector mocking is needed - and must be
       // avoided here, since mocking querySelector would also break the real
-      // waitForElement calls the modal-selector walk depends on below.
+      // waitForElement call the toggle lookup depends on below.
       const userScriptInstance = new ChatgptUserScript();
       const siteData = (userScriptInstance as unknown as { getSiteScriptData: () => { tasks: unknown[] } }).getSiteScriptData();
-      const task = (siteData as { tasks: Array<{ selector: { selector: string; event: string }; modal_selectors: Array<{ selector: string; event: string }>; turn_off: boolean }> }).tasks[0]!;
+      const task = (siteData as { tasks: Array<{ selector: { selector: string; event: string }; modal_selectors: Array<{ selector: string; event: string }> | undefined; turn_off: boolean }> }).tasks[0]!;
 
-      const dom = buildRealChatgptSettingsDom();
-      const order: string[] = [];
-      dom.profileButtonInner.addEventListener('pointerdown', () => order.push('profile'));
-      dom.settingsMenuItem.addEventListener('click', () => order.push('settings'));
-      dom.dataControlsLeaf.addEventListener('mousedown', () => order.push('data-controls'));
-      dom.openModalButtonLabel.addEventListener('click', () => order.push('open-modal'));
+      expect(task.modal_selectors).toBeUndefined();
+      const dom = buildRealChatgptToggleDom();
 
       const promise = instance.waitForSettingAppliedWithTimeout(task.selector, task.turn_off, task.modal_selectors);
       await vi.advanceTimersByTimeAsync(TICK);
 
       await expect(promise).resolves.toBeUndefined();
-      expect(order).toEqual(['profile', 'settings', 'data-controls', 'open-modal']);
       expect(dom.toggle.getAttribute('aria-checked')).toBe('false');
     });
   });
