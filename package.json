@@ -9,11 +9,16 @@
     "bundle": "webpack --config webpack.config.js --mode development",
     "bundle:dev": "webpack --config webpack.config.js --mode development",
     "bundle:prod": "webpack --config webpack.config.js --mode production",
-    "test": "vitest run"
+    "test": "vitest run",
+    "lint": "eslint 'src/**/*.ts' 'scripts/**/*.ts' --fix",
+    "presubmit": "npm run lint"
   },
   "type": "commonjs",
   "overrides": {
     "ajv": ">=8.18.0",
+    "eslint": {
+      "ajv": "^6.12.4"
+    },
     "fast-uri": "3.1.8",
     "baseline-browser-mapping": "2.11.11",
     "electron-to-chromium": "1.5.399",
@@ -24,6 +29,14 @@
   },
   "devDependencies": {
     "@types/node": "25.6.0",
+    "@typescript-eslint/eslint-plugin": "^8.71.1",
+    "@typescript-eslint/parser": "^8.71.1",
+    "eslint": "^8.57.1",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-licenses": "^2.0.0",
+    "eslint-plugin-n": "^16.6.2",
+    "eslint-plugin-promise": "^6.6.0",
     "jsdom": "29.1.1",
     "swf": "1.0.0",
     "ts-loader": "9.6.2",

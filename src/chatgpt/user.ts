@@ -3,21 +3,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // You can obtain one at https://mozilla.org/MPL/2.0/
 
-import type { UserScriptData } from '../common/declarations';
-import { logger } from '../common/logger';
-import { UserScriptBase } from '../common/user_base';
+import type {UserScriptData} from '../common/declarations';
+import {logger} from '../common/logger';
+import {UserScriptBase} from '../common/user_base';
 
 // The display name rendered in the account menu is used as a fallback when
 // the oai-client-auth-info cookie is missing or unparsable.
-const USER_IDENTIFIER_SELECTOR = '[data-testid="accounts-profile-button"] .truncate';
+const USER_IDENTIFIER_SELECTOR =
+    '[data-testid="accounts-profile-button"] .truncate';
 const AUTH_INFO_COOKIE_NAME = 'oai-client-auth-info';
 const PLI_USER_IDENTIFIER = 'precise_location_identity';
 
-
 interface AuthInfoCookie {
-    user?: {
-        name?: string;
-    };
+  user?: {name?: string;};
 }
 
 const TOGGLE_LABELS = {
@@ -42,7 +40,7 @@ const TOGGLE_LABELS = {
     ['Tillad', 'forbedrer', 'modellen'],
     // Deutsch
     ['Erlauben', 'Verbesserung', 'Modells'],
-    //eesti
+    // eesti
     ['Luba', 'mudeli', 'täiustamiseks'],
     // español (España)
     ['Permitir', 'mejoren', 'modelo'],
@@ -177,7 +175,7 @@ const TOGGLE_LABELS = {
     ['Tillad', 'marketingmåling'],
     // Deutsch
     ['Marketing', 'Messung', 'zulassen'],
-    //eesti
+    // eesti
     ['Luba', 'turunduse', 'mõõtmine'],
     // español (España)
     ['Permitir', 'medición', 'marketing'],
@@ -310,7 +308,7 @@ const TOGGLE_LABELS = {
     ['Tillad', 'tilpasset', 'markedsføring'],
     // Deutsch
     ['Personalisiertes', 'Marketing', 'zulassen'],
-    //eesti
+    // eesti
     ['Luba', 'isikupärastatud', 'turundus'],
     // español (España)
     ['Permitir', 'marketing', 'personalizado'],
@@ -425,126 +423,146 @@ const TOGGLE_LABELS = {
 type SwitchKind = keyof typeof TOGGLE_LABELS;
 
 const selectorFor = (kind: SwitchKind): string =>
-  `button[type="button"][role="switch"]:is(${TOGGLE_LABELS[kind]
-    .map(l => l.map(item => `[aria-label*="${CSS.escape(item)}"]`))
-    .join('')})`;
+    `button[type="button"][role="switch"]:is(${
+        TOGGLE_LABELS[kind]
+            .map(l => l.map(item => `[aria-label*="${CSS.escape(item)}"]`))
+            .join('')})`;
 
-const getPliUserId = (): string | undefined => {
+// Extracts the user identifier from the `precise_location_identity` value in
+// localStorage
+const getPliUserId = (): string|undefined => {
   try {
     const stored = localStorage.getItem(PLI_USER_IDENTIFIER);
     if (!stored) {
-      if (__DEV__) logger.info(`No existing ${PLI_USER_IDENTIFIER} found in localStorage.`);
+      if (__DEV__)
+        logger.info(
+            `No existing ${PLI_USER_IDENTIFIER} found in localStorage.`);
       return undefined;
     }
 
     const parsed: unknown = JSON.parse(stored);
 
     if (!Array.isArray(parsed) || parsed.length !== 2) {
-      if (__DEV__) logger.error(`Unexpected format of ${PLI_USER_IDENTIFIER}:`, parsed);
+      if (__DEV__)
+        logger.error(`Unexpected format of ${PLI_USER_IDENTIFIER}:`, parsed);
       return undefined;
     }
 
     const userId = parsed[1];
     if (typeof userId !== 'string' || userId.length === 0) {
-      if (__DEV__) logger.error(`Invalid user identifier in ${PLI_USER_IDENTIFIER}.`);
+      if (__DEV__)
+        logger.error(`Invalid user identifier in ${PLI_USER_IDENTIFIER}.`);
       return undefined;
     }
 
     return userId;
   } catch (error) {
-    if (__DEV__) logger.error(`Failed to parse ${PLI_USER_IDENTIFIER} from localStorage:`, error);
+    if (__DEV__)
+      logger.error(
+          `Failed to parse ${PLI_USER_IDENTIFIER} from localStorage:`, error);
     return undefined;
   }
 };
 
 export class ChatgptUserScript extends UserScriptBase {
-    readonly version = 6;
-    readonly includeUrlPatterns: string[] = ['https://chatgpt.com/*'];
-    readonly excludeUrlPatterns: string[] = [];
-    readonly userScript: string = 'user.js';
-    readonly policyScript: string = 'policy.js';
+  readonly version = 6;
+  readonly includeUrlPatterns: string[] = ['https://chatgpt.com/*'];
+  readonly excludeUrlPatterns: string[] = [];
+  readonly userScript: string = 'user.js';
+  readonly policyScript: string = 'policy.js';
 
-    getUserId(): string | undefined {
-        const nameFromCookie = this.getUserNameFromAuthInfoCookie();
-        if (nameFromCookie) {
-            if (__DEV__) logger.debug(`Extracted user name:${nameFromCookie}`);
-            return nameFromCookie;
-        }
-
-        const pliUserId = getPliUserId();
-        if (pliUserId) {
-            if (__DEV__) logger.debug(`Extracted pliUserId:${pliUserId}`);
-            return pliUserId;
-        }
-
-        const userElement = document.querySelector(USER_IDENTIFIER_SELECTOR);
-        if (!userElement || !userElement.textContent) {
-            if (__DEV__) logger.error(`User identifier element not found for selector ${USER_IDENTIFIER_SELECTOR}.`);
-            return undefined;
-        }
-        if (__DEV__) logger.debug(`userElement.textContent:${userElement?.textContent ?? 'N/A'}`);
-        return userElement.textContent.trim() || undefined;
+  getUserId(): string|undefined {
+    const nameFromCookie = this.getUserNameFromAuthInfoCookie();
+    if (nameFromCookie) {
+      if (__DEV__) logger.debug(`Extracted user name:${nameFromCookie}`);
+      return nameFromCookie;
     }
 
-    private getUserNameFromAuthInfoCookie(): string | undefined {
-        const prefix = `${AUTH_INFO_COOKIE_NAME}=`;
-        const rawCookie = document.cookie.split('; ').find(row => row.startsWith(prefix));
-        if (!rawCookie) {
-            return undefined;
-        }
-        try {
-            const value = rawCookie.slice(prefix.length);
-            const data: AuthInfoCookie = JSON.parse(decodeURIComponent(value));
-            const name = data.user?.name;
-            return typeof name === 'string' ? name.trim() || undefined : undefined;
-        } catch (error) {
-            if (__DEV__) logger.error(`Failed to parse ${AUTH_INFO_COOKIE_NAME} cookie:`, error);
-            return undefined;
-        }
+    const pliUserId = getPliUserId();
+    if (pliUserId) {
+      if (__DEV__) logger.debug(`Extracted pliUserId:${pliUserId}`);
+      return pliUserId;
     }
 
-    protected getSiteScriptData():
+    const userElement = document.querySelector(USER_IDENTIFIER_SELECTOR);
+    if (!userElement || !userElement.textContent) {
+      if (__DEV__)
+        logger.error(`User identifier element not found for selector ${
+            USER_IDENTIFIER_SELECTOR}.`);
+      return undefined;
+    }
+    if (__DEV__)
+      logger.debug(
+          `userElement.textContent:${userElement?.textContent ?? 'N/A'}`);
+    return userElement.textContent.trim() || undefined;
+  }
+
+  private getUserNameFromAuthInfoCookie(): string|undefined {
+    const prefix = `${AUTH_INFO_COOKIE_NAME}=`;
+    const rawCookie =
+        document.cookie.split('; ').find(row => row.startsWith(prefix));
+    if (!rawCookie) {
+      return undefined;
+    }
+    try {
+      const value = rawCookie.slice(prefix.length);
+      const data: AuthInfoCookie = JSON.parse(decodeURIComponent(value));
+      const name = data.user?.name;
+      return typeof name === 'string' ? name.trim() || undefined : undefined;
+    } catch (error) {
+      if (__DEV__)
+        logger.error(`Failed to parse ${AUTH_INFO_COOKIE_NAME} cookie:`, error);
+      return undefined;
+    }
+  }
+
+  protected getSiteScriptData():
       Omit<UserScriptData, 'user_id'|'initial_execution'> {
-        return {
-            share_experience_link: "",
-            site_name: 'chatgpt.com',
-            tasks: [
-            {
-                uid: '1',
-                url: 'https://chatgpt.com/settings/data-controls',
-                description: 'Disable "Improve the model for everyone"',
-                selector: {selector: selectorFor('improveTheModelForEveryone'), event: 'click'},
-                modal_selectors: undefined,
-                available_for_countries: undefined,
-                unavailable_for_countries: undefined,
-                turn_off: true,
-                error_description: undefined
-            },
-            {
-                uid: '2',
-                url: 'https://chatgpt.com/settings/data-controls?view=marketing-privacy',
-                description: 'Disable "Marketing measurement"',
-                selector: {selector: selectorFor('measurement'), event: 'click'},
-                modal_selectors: undefined,
-                available_for_countries: ['us'],
-                unavailable_for_countries: undefined,
-                turn_off: true,
-                error_description: undefined
-            },
-            {
-                uid: '3',
-                url: 'https://chatgpt.com/settings/data-controls?view=marketing-privacy',
-                description: 'Disable "Personalized marketing"',
-                selector: {selector: selectorFor('personalized'), event: 'click'},
-                modal_selectors: undefined,
-                available_for_countries: ['us'],
-                unavailable_for_countries: undefined,
-                turn_off: true,
-                error_description: undefined
-            }
-            ]
-        };
-    }
+    return {
+      share_experience_link: '',
+      site_name: 'chatgpt.com',
+      tasks: [
+        {
+          uid: '1',
+          url: 'https://chatgpt.com/settings/data-controls',
+          description: 'Disable "Improve the model for everyone"',
+          selector: {
+            selector: selectorFor('improveTheModelForEveryone'),
+            event: 'click'
+          },
+          modal_selectors: undefined,
+          available_for_countries: undefined,
+          unavailable_for_countries: undefined,
+          turn_off: true,
+          error_description: undefined
+        },
+        {
+          uid: '2',
+          url:
+              'https://chatgpt.com/settings/data-controls?view=marketing-privacy',
+          description: 'Disable "Marketing measurement"',
+          selector: {selector: selectorFor('measurement'), event: 'click'},
+          modal_selectors: undefined,
+          available_for_countries: ['us'],
+          unavailable_for_countries: undefined,
+          turn_off: true,
+          error_description: undefined
+        },
+        {
+          uid: '3',
+          url:
+              'https://chatgpt.com/settings/data-controls?view=marketing-privacy',
+          description: 'Disable "Personalized marketing"',
+          selector: {selector: selectorFor('personalized'), event: 'click'},
+          modal_selectors: undefined,
+          available_for_countries: ['us'],
+          unavailable_for_countries: undefined,
+          turn_off: true,
+          error_description: undefined
+        }
+      ]
+    };
+  }
 }
 
 window.UserScriptInstance = new ChatgptUserScript();
