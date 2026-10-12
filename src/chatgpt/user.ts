@@ -11,6 +11,8 @@ import { UserScriptBase } from '../common/user_base';
 // the oai-client-auth-info cookie is missing or unparsable.
 const USER_IDENTIFIER_SELECTOR = '[data-testid="accounts-profile-button"] .truncate';
 const AUTH_INFO_COOKIE_NAME = 'oai-client-auth-info';
+const PLI_USER_IDENTIFIER = 'precise_location_identity';
+
 
 interface AuthInfoCookie {
     user?: {
@@ -427,6 +429,34 @@ const selectorFor = (kind: SwitchKind): string =>
     .map(l => l.map(item => `[aria-label*="${CSS.escape(item)}"]`))
     .join('')})`;
 
+const getPliUserId = (): string | undefined => {
+  try {
+    const stored = localStorage.getItem(PLI_USER_IDENTIFIER);
+    if (!stored) {
+      if (__DEV__) logger.info(`No existing ${PLI_USER_IDENTIFIER} found in localStorage.`);
+      return undefined;
+    }
+
+    const parsed: unknown = JSON.parse(stored);
+
+    if (!Array.isArray(parsed) || parsed.length !== 2) {
+      if (__DEV__) logger.error(`Unexpected format of ${PLI_USER_IDENTIFIER}:`, parsed);
+      return undefined;
+    }
+
+    const userId = parsed[1];
+    if (typeof userId !== 'string' || userId.length === 0) {
+      if (__DEV__) logger.error(`Invalid user identifier in ${PLI_USER_IDENTIFIER}.`);
+      return undefined;
+    }
+
+    return userId;
+  } catch (error) {
+    if (__DEV__) logger.error(`Failed to parse ${PLI_USER_IDENTIFIER} from localStorage:`, error);
+    return undefined;
+  }
+};
+
 export class ChatgptUserScript extends UserScriptBase {
     readonly version = 5;
     readonly includeUrlPatterns: string[] = ['https://chatgpt.com/*'];
@@ -437,8 +467,14 @@ export class ChatgptUserScript extends UserScriptBase {
     getUserId(): string | undefined {
         const nameFromCookie = this.getUserNameFromAuthInfoCookie();
         if (nameFromCookie) {
-            if (__DEV__) logger.debug(`Extracted user name:${nameFromCookie ?? 'N/A'}`);
+            if (__DEV__) logger.debug(`Extracted user name:${nameFromCookie}`);
             return nameFromCookie;
+        }
+
+        const pliUserId = getPliUserId();
+        if (pliUserId) {
+            if (__DEV__) logger.debug(`Extracted pliUserId:${pliUserId}`);
+            return pliUserId;
         }
 
         const userElement = document.querySelector(USER_IDENTIFIER_SELECTOR);
