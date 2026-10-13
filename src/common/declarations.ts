@@ -1,11 +1,11 @@
 // Copyright (c) 2026 The Brave Authors. All rights reserved.
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
-// You can obtain one at https://mozilla.org/MPL/2.0/
+// You can obtain one at https://mozilla.org/MPL/2.0/.
 
-import type { UserScriptBase } from "./user_base";
-import type { PolicyScriptBase } from "./policy_base";
-import type { Task } from "./psst_utils";
+import type { UserScriptBase } from './user_base'
+import type { PolicyScriptBase } from './policy_base'
+import type { Task } from './psst_utils'
 
 export interface UserScriptData {
   user_id: string | undefined;
@@ -26,14 +26,14 @@ export interface PolicyScriptInputData extends UserScriptData {
 declare global {
     // Compile-time build flag injected by webpack's DefinePlugin.
     // `true` in development builds, `false` (and dead-code-eliminated) in production.
-    const __DEV__: boolean;
+    const __DEV__: boolean
 
     // Older hosts prepend `const params = {...}` to the top of the bundle,
     // making it a lexical global reachable by every module via the scope
     // chain, instead of assigning `window.__bravePsstParams`. Kept for backward
     // compatibility -- see the `window.__bravePsstParams` doc below for the current
     // mechanism, which takes priority when both are present.
-    const params: string | PolicyScriptInputData | undefined;
+    const params: string | PolicyScriptInputData | undefined
 
     interface Window {
         // The host assigns `window.__bravePsstParams = {...}` before injecting the
