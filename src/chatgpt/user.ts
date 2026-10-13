@@ -425,6 +425,28 @@ const selectorFor = (kind: SwitchKind): string =>
             .map(l => l.map(item => `[aria-label*="${CSS.escape(item)}"]`))
             .join('')})`
 
+// Extracts user identifier from the website session data,
+// stored in the script element.
+// Example:
+// {
+//   "session": {
+//     "accessToken": "eyJhcUPQ",
+//     "account": {
+//       "id": "11111-1111-1111-1111-76fa7af1fc4a",
+//       "planType": "free",
+//       "isDelinquent": false,
+//       "structure": "personal",
+//       "residencyRegion": "no_constraint",
+//       "computeResidency": "no_constraint",
+//       "isFedrampCompliantWorkspace": false
+//     },
+//     "user": {
+//       "id": "user-aMjJnhqwertysdfgh7",
+//       "email": "example@email.com",
+//       "name": "user name",
+//     }
+//   }
+// }
 const getChatGptUserId = (): string | undefined => {
   try {
     const el = document.getElementById('client-bootstrap')
