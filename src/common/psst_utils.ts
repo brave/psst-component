@@ -191,7 +191,6 @@ export async function waitForElement (
       return resolve(element)
     }
 
-    let timer: ReturnType<typeof setTimeout>
     const root = document.documentElement ?? document
 
     // If not found, set up an observer
@@ -210,7 +209,7 @@ export async function waitForElement (
     })
 
     // Timeout fallback
-    timer = setTimeout(() => {
+    const timer = setTimeout(() => {
       observer.disconnect()
       reject(new Error('The element not found within timeout'))
     }, timeout)

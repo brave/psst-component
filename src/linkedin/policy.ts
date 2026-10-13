@@ -7,7 +7,7 @@ import { PolicyScriptBase } from '../common/policy_base'
 import { waitForElementWithRetry, type ModalSelectorData } from '../common/psst_utils'
 
 export class LinkedInPolicyScript extends PolicyScriptBase {
-  async waitForSettingAppliedWithTimeout (selectorData: ModalSelectorData | undefined, turnOff: boolean, modalSelectors: ModalSelectorData[] | undefined): Promise<void> {
+  async waitForSettingAppliedWithTimeout (selectorData: ModalSelectorData | undefined, turnOff: boolean, _modalSelectors: ModalSelectorData[] | undefined): Promise<void> {
     const targetSelector = selectorData?.selector
     if (targetSelector) {
       await waitForElementWithRetry(targetSelector)

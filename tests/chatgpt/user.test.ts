@@ -10,7 +10,7 @@ import { ChatgptUserScript } from '../../src/chatgpt/user';
 import { fakeElementWithText, mockDocumentCookie, mockQuerySelector } from '../common/dom_mocks';
 
 const AUTH_INFO_COOKIE_NAME = 'oai-client-auth-info';
-const USER_IDENTIFIER_SELECTOR = '[data-testid="accounts-profile-button"] .truncate';
+const USER_IDENTIFIER_SELECTOR = 'button[aria-label="Open profile menu"] .truncate';
 
 /** Builds a valid `oai-client-auth-info` cookie string for the given name. */
 function authInfoCookie(name: unknown): string {
@@ -82,7 +82,7 @@ describe('ChatgptUserScript.getUserId', () => {
     });
   });
 
-  describe('DOM fallback (accounts-profile-button)', () => {
+  describe('DOM fallback (profile menu button)', () => {
     beforeEach(() => {
       // No auth-info cookie present, forcing every case in here down the DOM path.
       mockDocumentCookie('');

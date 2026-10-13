@@ -8,13 +8,15 @@ import { logger } from '../common/logger'
 import { UserScriptBase } from '../common/user_base'
 
 // The display name rendered in the account menu is used as a fallback when
-// the oai-client-auth-info cookie is missing or unparsable.
-const USER_IDENTIFIER_SELECTOR =
-    '[data-testid="accounts-profile-button"] .truncate'
+// the oai-client-auth-info cookie is missing or unparsable. The profile
+// button has no stable data-testid anymore, so anchor on its accessible
+// name (aria-label) instead of its CSS-module class names, which are
+// hashed per build. The name is the first `.truncate` descendant; the plan
+// label (e.g. "Free") is a second, later `.truncate` span that
+// querySelector's document-order match naturally skips.
 const AUTH_INFO_COOKIE_NAME = 'oai-client-auth-info'
-const PLI_USER_IDENTIFIER = 'precise_location_identity'
 
-interface AuthInfoCookie {
+    interface AuthInfoCookie {
   user?: {name?: string;};
 }
 
@@ -414,53 +416,146 @@ const TOGGLE_LABELS = {
     ['允許個人化行銷'],
     // 繁體中文（香港）
     ['允許個人化市場推廣']
-
+  ],
+  userName: [
+    // English
+    ['Open', 'menu'],
+    // Albanian
+    ['Hap', 'menynë'],
+    // Armenian
+    ['Բացել', 'պրոֆիլի'],
+    // Bahasa Melayu
+    ['Buka', 'menu'],
+    // bosanski
+    ['Otvori', 'meni'],
+    // Burmese
+    ['ပရိုဖိုင်', 'မီနူးကို'],
+    // català
+    ['Obre', 'menú'],
+    // čeština
+    ['Otevřít', 'nabídku'],
+    // dansk
+    ['Åbn', 'profilmenu'],
+    // Deutsch
+    ['Profilmenü', 'öffnen'],
+    // eesti
+    ['Ava', 'profiilimenüü'],
+    // español (España)
+    ['Abrir', 'menú'],
+    // español (Latinoamérica)
+    ['Abrir', 'menú'],
+    // Filipino
+    ['Buksan', 'menu'],
+    // français (Canada)
+    ['Ouvrir', 'menu'],
+    // français (France)
+    ['Ouvrir', 'menu'],
+    // Georgian
+    ['პროფილის', 'მენიუს'],
+    // hrvatski
+    ['Otvori', 'izbornik'],
+    // Icelandic
+    ['Opna', 'prófílvalmynd'],
+    // Indonesia
+    ['Buka', 'menu'],
+    // italiano
+    ['Apri', 'menu'],
+    // Kiswahili
+    ['Fungua', 'menyu'],
+    // latviešu
+    ['Atvērt', 'profila'],
+    // lietuvių
+    ['Atidaryti', 'meniu'],
+    // Macedonian
+    ['Отвори', 'менито'],
+    // magyar
+    ['Profilmenü', 'megnyitása'],
+    // Mongolian
+    ['Профайлын', 'цэсийг'],
+    // Nederlands
+    ['Profielmenu', 'openen'],
+    // norsk bokmål
+    ['Åpne', 'profilmenyen'],
+    // polski
+    ['Otwórz', 'menu'],
+    // português (Brasil)
+    ['Abrir', 'menu'],
+    // português (Portugal)
+    ['Abrir', 'menu'],
+    // română
+    ['Deschide', 'meniul'],
+    // slovenčina
+    ['Otvoriť', 'ponuku'],
+    // slovenščina
+    ['Odpri', 'meni'],
+    // Somali
+    ['Fur', 'aqoonsiga'],
+    // suomi
+    ['Avaa', 'profiilivalikko'],
+    // svenska
+    ['Öppna', 'profilmenyn'],
+    // Tiếng Việt
+    ['Mở', 'menu'],
+    // Türkçe
+    ['Profil', 'menüsünü'],
+    // Ελληνικά
+    ['Άνοιγμα', 'μενού'],
+    // български
+    ['Отваряне', 'менюто'],
+    // қазақ тілі
+    ['Профиль', 'мәзірін'],
+    // русский
+    ['Открыть', 'меню'],
+    // српски
+    ['Отвори', 'мени'],
+    // українська
+    ['Відкрити', 'меню'],
+    // اردو
+    ['پروفائل', 'مینو'],
+    // العربية
+    ['فتح', 'الملف'],
+    // فارسی
+    ['کردن', 'منوی'],
+    // አማርኛ
+    ['የመገለጫ', 'ምናሌን'],
+    // मराठी
+    ['प्रोफाइल', 'उघडा'],
+    // हिन्दी
+    ['प्रोफ़ाइल', 'खोलें'],
+    // अनुमति
+    ['প্রোফাইল', 'খুলুন'],
+    // ਪੰਜਾਬੀ
+    ['ਪ੍ਰੋਫਾਈਲ', 'ਖੋਲ੍ਹੋ'],
+    // ગુજરાતી
+    ['પ્રોફાઇલ', 'ખોલો'],
+    // தமிழ்
+    ['சுயவிவர', 'மெனுவைத்'],
+    // తెలుగు
+    ['ప్రొఫైల్', 'మెనూని'],
+    // ಕನ್ನಡ
+    ['ಪ್ರೊಫೈಲ್', 'ತೆರೆಯಿರಿ'],
+    // മലയാളം
+    ['പ്രൊഫൈൽ', 'തുറക്കുക'],
+    // 한국어
+    ['프로필', '메뉴'],
+    // 日本語
+    ['プロフィールメニューを開く'],
+    // 简体中文
+    ['打开个人资料菜单'],
+    // 繁體中文（台灣）
+    ['開啟個人檔案選單'],
+    // 繁體中文（香港）
+    ['開啟個人檔案選單']
   ]
-
 }
+
 type SwitchKind = keyof typeof TOGGLE_LABELS;
 
-const selectorFor = (kind: SwitchKind): string =>
-    `button[type="button"][role="switch"]:is(${
+const selectorFor = (prefixSelector: string, kind: SwitchKind): string =>
+    `${prefixSelector}:is(${
         TOGGLE_LABELS[kind]
             .map(l => l.map(item => `[aria-label*="${CSS.escape(item)}"]`))
             .join('')})`
-
-// Extracts the user identifier from the `precise_location_identity` value in
-// localStorage
-const getPliUserId = (): string|undefined => {
-  try {
-    const stored = localStorage.getItem(PLI_USER_IDENTIFIER)
-    if (!stored) {
-      if (__DEV__) {
-        logger.info(
-            `No existing ${PLI_USER_IDENTIFIER} found in localStorage.`)
-      }
-      return undefined
-    }
-
-    const parsed: unknown = JSON.parse(stored)
-
-    if (!Array.isArray(parsed) || parsed.length !== 2) {
-      if (__DEV__) { logger.error(`Unexpected format of ${PLI_USER_IDENTIFIER}:`, parsed) }
-      return undefined
-    }
-
-    const userId = parsed[1]
-    if (typeof userId !== 'string' || userId.length === 0) {
-      if (__DEV__) { logger.error(`Invalid user identifier in ${PLI_USER_IDENTIFIER}.`) }
-      return undefined
-    }
-
-    return userId
-  } catch (error) {
-    if (__DEV__) {
-      logger.error(
-          `Failed to parse ${PLI_USER_IDENTIFIER} from localStorage:`, error)
-    }
-    return undefined
-  }
-}
 
 export class ChatgptUserScript extends UserScriptBase {
   readonly version = 6
@@ -476,17 +571,13 @@ export class ChatgptUserScript extends UserScriptBase {
       return nameFromCookie
     }
 
-    const pliUserId = getPliUserId()
-    if (pliUserId) {
-      if (__DEV__) logger.debug(`Extracted pliUserId:${pliUserId}`)
-      return pliUserId
-    }
-
-    const userElement = document.querySelector(USER_IDENTIFIER_SELECTOR)
+    const userElement = document.querySelector(
+      selectorFor('button[type="button"][aria-haspopup="menu"]', 'userName'))
     if (!userElement || !userElement.textContent) {
       if (__DEV__) {
         logger.error(`User identifier element not found for selector ${
-            USER_IDENTIFIER_SELECTOR}.`)
+            selectorFor(
+                'button[type="button"][aria-haspopup="menu"]', 'userName')}.`)
       }
       return undefined
     }
@@ -510,7 +601,9 @@ export class ChatgptUserScript extends UserScriptBase {
       const name = data.user?.name
       return typeof name === 'string' ? name.trim() || undefined : undefined
     } catch (error) {
-      if (__DEV__) { logger.error(`Failed to parse ${AUTH_INFO_COOKIE_NAME} cookie:`, error) }
+      if (__DEV__) {
+        logger.error(`Failed to parse ${AUTH_INFO_COOKIE_NAME} cookie:`, error)
+      }
       return undefined
     }
   }
@@ -526,7 +619,9 @@ export class ChatgptUserScript extends UserScriptBase {
           url: 'https://chatgpt.com/settings/data-controls',
           description: 'Disable "Improve the model for everyone"',
           selector: {
-            selector: selectorFor('improveTheModelForEveryone'),
+            selector: selectorFor(
+              'button[type="button"][role="switch"]',
+              'improveTheModelForEveryone'),
             event: 'click'
           },
           modal_selectors: undefined,
@@ -540,7 +635,11 @@ export class ChatgptUserScript extends UserScriptBase {
           url:
               'https://chatgpt.com/settings/data-controls?view=marketing-privacy',
           description: 'Disable "Marketing measurement"',
-          selector: { selector: selectorFor('measurement'), event: 'click' },
+          selector: {
+            selector: selectorFor(
+              'button[type="button"][role="switch"]', 'measurement'),
+            event: 'click'
+          },
           modal_selectors: undefined,
           available_for_countries: ['us'],
           unavailable_for_countries: undefined,
@@ -552,7 +651,11 @@ export class ChatgptUserScript extends UserScriptBase {
           url:
               'https://chatgpt.com/settings/data-controls?view=marketing-privacy',
           description: 'Disable "Personalized marketing"',
-          selector: { selector: selectorFor('personalized'), event: 'click' },
+          selector: {
+            selector: selectorFor(
+              'button[type="button"][role="switch"]', 'personalized'),
+            event: 'click'
+          },
           modal_selectors: undefined,
           available_for_countries: ['us'],
           unavailable_for_countries: undefined,

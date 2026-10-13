@@ -5,7 +5,7 @@
 
 import type { PolicyScriptInputData } from './declarations'
 import { logger } from './logger'
-import { calculateProgress, type ModalSelectorData, moveCurrentTask, normalizeModalSelector, PSST_STORAGE_KEY, type PsstData, PsstState} from './psst_utils'
+import { calculateProgress, type ModalSelectorData, moveCurrentTask, normalizeModalSelector, PSST_STORAGE_KEY, type PsstData, PsstState } from './psst_utils'
 
 export interface PolicyScriptResult {
   next_url: string|undefined;
