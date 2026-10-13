@@ -1,9 +1,9 @@
 // Copyright (c) 2026 The Brave Authors. All rights reserved.
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
-// You can obtain one at https://mozilla.org/MPL/2.0/.
+// You can obtain one at https://mozilla.org/MPL/2.0/
 
-import { logger } from './logger'
+import {logger} from './logger';
 
 export interface ModalSelectorData {
   selector: string,
@@ -41,73 +41,73 @@ export interface PsstData {
   updated_at?: number;
 }
 
-export const PSST_STORAGE_KEY = 'psst'
+export const PSST_STORAGE_KEY = 'psst';
 /**
  * Maximum age of a `STARTED` flow before we treat it as broken.
  */
-const PSST_STALE_MS = 40_000
+const PSST_STALE_MS = 40_000;
 
 const isOnExpectedStep =
     (psst: Pick<PsstData, 'current_task'|'start_url'>): boolean => {
-      const expected = psst.current_task?.url || psst.start_url || undefined
+      const expected = psst.current_task?.url || psst.start_url || undefined;
       if (!expected) {
-        return false
+        return false;
       }
       try {
-        const target = new URL(expected, location.href)
+        const target = new URL(expected, location.href);
         return target.origin === location.origin &&
-            target.pathname === location.pathname
+            target.pathname === location.pathname;
       } catch {
-        return false
+        return false;
       }
-    }
+    };
 
 export const isInitialExecution =
     () => {
       if (typeof sessionStorage === 'undefined') {
-        return true
+        return true;
       }
 
-      const stored = sessionStorage.getItem(PSST_STORAGE_KEY)
+      const stored = sessionStorage.getItem(PSST_STORAGE_KEY);
       if (stored === null) {
-        return true
+        return true;
       }
 
       try {
         const parsed =
-            JSON.parse(stored) as Partial<PsstData>| null | undefined
+            JSON.parse(stored) as Partial<PsstData>| null | undefined;
 
         // Not an active run (completed, missing, or unknown state) → start
         // fresh flow.
         if (parsed?.state !== PsstState.STARTED) {
-          return true
+          return true;
         }
 
         // Broken-flow detection: an active run must be recent AND on the step
         // it was driven to. Otherwise it was interrupted, so restart from
         // scratch.
-        const age = typeof parsed.updated_at === 'number'
-          ? Date.now() - parsed.updated_at
-          : NaN
-        const isNotExpired = age >= 0 && age <= PSST_STALE_MS
+        const age = typeof parsed.updated_at === 'number' ?
+            Date.now() - parsed.updated_at :
+            NaN;
+        const isNotExpired = age >= 0 && age <= PSST_STALE_MS;
 
         const onExpectedStep = isOnExpectedStep({
           current_task: parsed.current_task,
-          start_url: parsed.start_url ?? ''
-        })
+          start_url: parsed.start_url ?? '',
+        });
 
         if (!isNotExpired || !onExpectedStep) {
-          if (__DEV__) {
+          if (__DEV__)
             logger.debug(`Detected broken PSST flow; expired:${
-                !isNotExpired} wrong step: ${!onExpectedStep}`)
-          }
-          return true
+                !isNotExpired} wrong step: ${!onExpectedStep}`);
+          return true;
         }
 
-        return false
+        return false;
       } catch (error) {
-        if (__DEV__) { logger.error('Failed to parse PsstData from sessionStorage:', error) }
-        return true
+        if (__DEV__)
+          logger.error('Failed to parse PsstData from sessionStorage:', error);
+        return true;
       }
     }
 
@@ -121,15 +121,15 @@ export const normalizeModalSelector =
     (selector: ModalSelectorData|string|undefined): ModalSelectorData|
     undefined => {
       if (typeof selector === 'string') {
-        return { selector, event: 'click' }
+        return {selector, event: 'click'};
       }
-      return selector
-    }
+      return selector;
+    };
 
 export const moveCurrentTask =
     (psstObj: PsstData|undefined, errorMessage: string|undefined) => {
       if (!psstObj?.current_task) {
-        return
+        return;
       }
 
       const completedTask: Task = {
@@ -142,31 +142,30 @@ export const moveCurrentTask =
         available_for_countries: psstObj.current_task.available_for_countries,
         unavailable_for_countries: psstObj.current_task.unavailable_for_countries,
         error_description: errorMessage
-      }
+      };
 
-      psstObj.applied_tasks.push(completedTask)
-    }
+      psstObj.applied_tasks.push(completedTask);
+    };
 
 const getAvailableTasks = (psst: PsstData|undefined) => {
-  return (psst?.tasks_list?.length ?? 0) + (psst?.current_task ? 1 : 0)
-}
+  return (psst?.tasks_list?.length ?? 0) + (psst?.current_task ? 1 : 0);
+};
 
 const getProcessedTasks = (psst: PsstData|undefined) => {
-  return psst?.applied_tasks?.length ?? 0
-}
+  return psst?.applied_tasks?.length ?? 0;
+};
 
-export async function waitForElementWithRetry (
-  selector: string, count: number = 16, timeout: number = 500) {
-  let opened = false
+export async function waitForElementWithRetry(
+    selector: string, count: number = 16, timeout: number = 500) {
+  let opened = false;
   for (let retry = 0; retry < count && !opened; retry++) {
     try {
-      await waitForElement(selector, timeout)
-      opened = true
+      await waitForElement(selector, timeout);
+      opened = true;
     } catch {
-      if (__DEV__) {
+      if (__DEV__)
         logger.debug(
-            `waitForElementWithRetry retry ${retry + 1}: element:${selector} not up yet, retrying`)
-      }
+            `waitForElementWithRetry retry ${retry + 1}: element:${selector} not up yet, retrying`);
     }
   }
 }
@@ -180,40 +179,41 @@ export async function waitForElementWithRetry (
  * @returns Promise resolving to the found HTMLElement
  * @throws Error if the element is not found within the timeout
  */
-export async function waitForElement (
+export async function waitForElement(
   selector: string,
   timeout: number = 5000
 ): Promise<HTMLElement> {
   return new Promise((resolve, reject) => {
     // Check immediately
-    const element = document.querySelector<HTMLElement>(selector)
+    const element = document.querySelector<HTMLElement>(selector);
     if (element) {
-      return resolve(element)
+      return resolve(element);
     }
 
-    const root = document.documentElement ?? document
+    let timer: ReturnType<typeof setTimeout>;
+    const root = document.documentElement ?? document;
 
     // If not found, set up an observer
     const observer = new MutationObserver((mutations, obs) => {
-      const el = root.querySelector<HTMLElement>(selector)
+      const el = root.querySelector<HTMLElement>(selector);
       if (el) {
-        obs.disconnect()
-        clearTimeout(timer)
-        resolve(el)
+        obs.disconnect();
+        clearTimeout(timer);
+        resolve(el);
       }
-    })
+    });
 
     observer.observe(root, {
       childList: true,
-      subtree: true
-    })
+      subtree: true,
+    });
 
     // Timeout fallback
-    const timer = setTimeout(() => {
-      observer.disconnect()
-      reject(new Error('The element not found within timeout'))
-    }, timeout)
-  })
+    timer = setTimeout(() => {
+      observer.disconnect();
+      reject(new Error(`The element not found within timeout`));
+    }, timeout);
+  });
 }
 
 /**
@@ -226,7 +226,7 @@ export async function waitForElement (
  * @param timeout - Maximum time to wait in milliseconds (default: 2000)
  * @throws Error if the attribute does not reach expectedValue within the timeout
  */
-export async function waitForAttributeValue (
+export async function waitForAttributeValue(
   element: HTMLElement,
   attribute: string,
   expectedValue: string,
@@ -234,32 +234,32 @@ export async function waitForAttributeValue (
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     if (element.getAttribute(attribute) === expectedValue) {
-      return resolve()
+      return resolve();
     }
 
     const observer = new MutationObserver(() => {
       if (element.getAttribute(attribute) === expectedValue) {
-        observer.disconnect()
-        resolve()
+        observer.disconnect();
+        resolve();
       }
-    })
+    });
 
-    observer.observe(element, { attributes: true, attributeFilter: [attribute] })
+    observer.observe(element, {attributes: true, attributeFilter: [attribute]});
 
     setTimeout(() => {
-      observer.disconnect()
-      reject(new Error(`Attribute "${attribute}" did not become "${expectedValue}" within ${timeout}ms`))
-    }, timeout)
-  })
+      observer.disconnect();
+      reject(new Error(`Attribute "${attribute}" did not become "${expectedValue}" within ${timeout}ms`));
+    }, timeout);
+  });
 }
 
 export const calculateProgress = (psstObj: PsstData | undefined) => {
-  const processed = Number(getProcessedTasks(psstObj)) || 0
-  const available = Number(getAvailableTasks(psstObj)) || 0
-  const total = processed + available
+  const processed = Number(getProcessedTasks(psstObj)) || 0;
+  const available = Number(getAvailableTasks(psstObj)) || 0;
+  const total = processed + available;
 
-  return total === 0 ? 0 : Math.round((processed / total) * 100)
-}
+  return total === 0 ? 0 : Math.round((processed / total) * 100);
+};
 
 /**
  * Determines if a task is available for a specific country.
@@ -279,33 +279,33 @@ export const calculateProgress = (psstObj: PsstData | undefined) => {
  * @param countryId The country ID to check against, or undefined if unknown
  * @returns boolean
  */
-function normalizeCountryId (countryId: string): string {
-  return countryId.trim().toUpperCase()
+function normalizeCountryId(countryId: string): string {
+  return countryId.trim().toUpperCase();
 }
 
-export function isTaskAvailableForCountry (
+export function isTaskAvailableForCountry(
   task: Task,
   countryId: string|undefined
 ): boolean {
   // 1. Unknown country: don't restrict availability.
   if (countryId === undefined) {
-    return true
+    return true;
   }
 
-  const normalizedCountryId = normalizeCountryId(countryId)
+  const normalizedCountryId = normalizeCountryId(countryId);
 
   // 2. Check explicit blocklist (unavailable)
   if (task.unavailable_for_countries?.some(
-    id => normalizeCountryId(id) === normalizedCountryId)) {
-    return false
+      id => normalizeCountryId(id) === normalizedCountryId)) {
+    return false;
   }
 
   // 3. Check explicit allowlist (available)
   if (task.available_for_countries) {
     return task.available_for_countries.some(
-      id => normalizeCountryId(id) === normalizedCountryId)
+        id => normalizeCountryId(id) === normalizedCountryId);
   }
 
   // 4. Default case: if no allowlist is defined and not blocked, it's available
-  return true
+  return true;
 }

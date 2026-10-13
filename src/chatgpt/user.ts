@@ -1,17 +1,18 @@
 // Copyright (c) 2026 The Brave Authors. All rights reserved.
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
-// You can obtain one at https://mozilla.org/MPL/2.0/.
+// You can obtain one at https://mozilla.org/MPL/2.0/
 
-import type { UserScriptData } from '../common/declarations'
-import { logger } from '../common/logger'
-import { UserScriptBase } from '../common/user_base'
+import type {UserScriptData} from '../common/declarations';
+import {logger} from '../common/logger';
+import {UserScriptBase} from '../common/user_base';
 
 // The display name rendered in the account menu is used as a fallback when
 // the oai-client-auth-info cookie is missing or unparsable.
 const USER_IDENTIFIER_SELECTOR =
-    '[data-testid="accounts-profile-button"] .truncate'
-const AUTH_INFO_COOKIE_NAME = 'oai-client-auth-info'
+    '[data-testid="accounts-profile-button"] .truncate';
+const AUTH_INFO_COOKIE_NAME = 'oai-client-auth-info';
+const PLI_USER_IDENTIFIER = 'precise_location_identity';
 
 interface AuthInfoCookie {
   user?: {name?: string;};
@@ -148,7 +149,9 @@ const TOGGLE_LABELS = {
     // 繁體中文（台灣）
     ['允許使用對話改善模型'],
     // 繁體中文（香港）
-    ['允許使用對話來改進模型']
+    ['允許使用對話來改進模型'],
+
+
 
   ],
   measurement: [
@@ -281,7 +284,7 @@ const TOGGLE_LABELS = {
     // 繁體中文（台灣）
     ['允許行銷成效衡量'],
     // 繁體中文（香港）
-    ['允許市場推廣成效衡量']
+    ['允許市場推廣成效衡量'],
 
   ],
   personalized: [
@@ -412,18 +415,18 @@ const TOGGLE_LABELS = {
     // 繁體中文（台灣）
     ['允許個人化行銷'],
     // 繁體中文（香港）
-    ['允許個人化市場推廣']
+    ['允許個人化市場推廣'],
 
-  ]
-}
+  ],
 
+};
 type SwitchKind = keyof typeof TOGGLE_LABELS;
 
 const selectorFor = (kind: SwitchKind): string =>
     `button[type="button"][role="switch"]:is(${
         TOGGLE_LABELS[kind]
             .map(l => l.map(item => `[aria-label*="${CSS.escape(item)}"]`))
-            .join('')})`
+            .join('')})`;
 
 const getChatGptUserId = (): string | undefined => {
   try {
@@ -438,20 +441,20 @@ const getChatGptUserId = (): string | undefined => {
   } catch {
     return undefined
   }
-}
+};
 
 export class ChatgptUserScript extends UserScriptBase {
-  readonly version = 6
-  readonly includeUrlPatterns: string[] = ['https://chatgpt.com/*']
-  readonly excludeUrlPatterns: string[] = []
-  readonly userScript: string = 'user.js'
-  readonly policyScript: string = 'policy.js'
+  readonly version = 6;
+  readonly includeUrlPatterns: string[] = ['https://chatgpt.com/*'];
+  readonly excludeUrlPatterns: string[] = [];
+  readonly userScript: string = 'user.js';
+  readonly policyScript: string = 'policy.js';
 
-  getUserId (): string|undefined {
-    const nameFromCookie = this.getUserNameFromAuthInfoCookie()
+  getUserId(): string|undefined {
+    const nameFromCookie = this.getUserNameFromAuthInfoCookie();
     if (nameFromCookie) {
-      if (__DEV__) logger.debug(`Extracted user name:${nameFromCookie}`)
-      return nameFromCookie
+      if (__DEV__) logger.debug(`Extracted user name:${nameFromCookie}`);
+      return nameFromCookie;
     }
 
     const userIdFromSession = getChatGptUserId()
@@ -460,42 +463,39 @@ export class ChatgptUserScript extends UserScriptBase {
       return userIdFromSession
     }
 
-    const userElement = document.querySelector(USER_IDENTIFIER_SELECTOR)
+    const userElement = document.querySelector(USER_IDENTIFIER_SELECTOR);
     if (!userElement || !userElement.textContent) {
-      if (__DEV__) {
+      if (__DEV__)
         logger.error(`User identifier element not found for selector ${
-            USER_IDENTIFIER_SELECTOR}.`)
-      }
-      return undefined
+            USER_IDENTIFIER_SELECTOR}.`);
+      return undefined;
     }
-    if (__DEV__) {
+    if (__DEV__)
       logger.debug(
-          `userElement.textContent:${userElement?.textContent ?? 'N/A'}`)
-    }
-    return userElement.textContent.trim() || undefined
+          `userElement.textContent:${userElement?.textContent ?? 'N/A'}`);
+    return userElement.textContent.trim() || undefined;
   }
 
-  private getUserNameFromAuthInfoCookie (): string|undefined {
-    const prefix = `${AUTH_INFO_COOKIE_NAME}=`
+  private getUserNameFromAuthInfoCookie(): string|undefined {
+    const prefix = `${AUTH_INFO_COOKIE_NAME}=`;
     const rawCookie =
-        document.cookie.split('; ').find(row => row.startsWith(prefix))
+        document.cookie.split('; ').find(row => row.startsWith(prefix));
     if (!rawCookie) {
-      return undefined
+      return undefined;
     }
     try {
-      const value = rawCookie.slice(prefix.length)
-      const data: AuthInfoCookie = JSON.parse(decodeURIComponent(value))
-      const name = data.user?.name
-      return typeof name === 'string' ? name.trim() || undefined : undefined
+      const value = rawCookie.slice(prefix.length);
+      const data: AuthInfoCookie = JSON.parse(decodeURIComponent(value));
+      const name = data.user?.name;
+      return typeof name === 'string' ? name.trim() || undefined : undefined;
     } catch (error) {
-      if (__DEV__) {
-        logger.error(`Failed to parse ${AUTH_INFO_COOKIE_NAME} cookie:`, error)
-      }
-      return undefined
+      if (__DEV__)
+        logger.error(`Failed to parse ${AUTH_INFO_COOKIE_NAME} cookie:`, error);
+      return undefined;
     }
   }
 
-  protected getSiteScriptData ():
+  protected getSiteScriptData():
       Omit<UserScriptData, 'user_id'|'initial_execution'> {
     return {
       share_experience_link: '',
@@ -520,7 +520,7 @@ export class ChatgptUserScript extends UserScriptBase {
           url:
               'https://chatgpt.com/settings/data-controls?view=marketing-privacy',
           description: 'Disable "Marketing measurement"',
-          selector: { selector: selectorFor('measurement'), event: 'click' },
+          selector: {selector: selectorFor('measurement'), event: 'click'},
           modal_selectors: undefined,
           available_for_countries: ['us'],
           unavailable_for_countries: undefined,
@@ -532,7 +532,7 @@ export class ChatgptUserScript extends UserScriptBase {
           url:
               'https://chatgpt.com/settings/data-controls?view=marketing-privacy',
           description: 'Disable "Personalized marketing"',
-          selector: { selector: selectorFor('personalized'), event: 'click' },
+          selector: {selector: selectorFor('personalized'), event: 'click'},
           modal_selectors: undefined,
           available_for_countries: ['us'],
           unavailable_for_countries: undefined,
@@ -540,14 +540,14 @@ export class ChatgptUserScript extends UserScriptBase {
           error_description: undefined
         }
       ]
-    }
+    };
   }
 }
 
-window.UserScriptInstance = new ChatgptUserScript()
+window.UserScriptInstance = new ChatgptUserScript();
 
 // The bundle's value is surfaced via a default export (see webpack.config.js
 // `output.library`). A trailing IIFE cannot work here: webpack wraps every
 // entry in its own non-returning function wrappers, so a `return` never
 // reaches the script's completion value.
-export default window.UserScriptInstance.getTasks()
+export default window.UserScriptInstance.getTasks();
