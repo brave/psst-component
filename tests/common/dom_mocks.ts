@@ -41,3 +41,17 @@ export function spyOnDocumentCookieWrites(): MockInstance {
 export function fakeElementWithText(textContent: string | null): Element {
   return { textContent } as unknown as Element;
 }
+
+/**
+ * Mocks `document.getElementById('client-bootstrap')` to mirror the
+ * `#client-bootstrap` script element the chatgpt.com page embeds with the
+ * session JSON blob. Pass a `userId` to simulate a signed-in session
+ * (`session.user.id`), or `undefined` to simulate the element being absent,
+ * as it is when signed out. Restored by `vi.restoreAllMocks()`.
+ */
+export function mockClientBootstrap(userId: string | undefined): MockInstance {
+  const element = userId === undefined
+    ? null
+    : ({ textContent: JSON.stringify({ session: { user: { id: userId } } }) } as unknown as HTMLElement);
+  return vi.spyOn(document, 'getElementById').mockReturnValue(element);
+}

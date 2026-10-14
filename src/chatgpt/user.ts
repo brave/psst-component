@@ -7,6 +7,16 @@ import type { UserScriptData } from '../common/declarations'
 import { logger } from '../common/logger'
 import { UserScriptBase } from '../common/user_base'
 
+// The display name rendered in the account menu is used as a fallback when
+// the oai-client-auth-info cookie is missing or unparsable.
+const USER_IDENTIFIER_SELECTOR =
+    '[data-testid="accounts-profile-button"] .truncate'
+const AUTH_INFO_COOKIE_NAME = 'oai-client-auth-info'
+
+interface AuthInfoCookie {
+  user?: { name?: string; };
+}
+
 const TOGGLE_LABELS = {
   improveTheModelForEveryone: [
     // English
@@ -454,14 +464,49 @@ export class ChatgptUserScript extends UserScriptBase {
 
   getUserId (): string | undefined {
     const userIdFromSession = getChatGptUserId()
+    const nameFromCookie = this.getUserNameFromAuthInfoCookie()
+    // Users that already use psst with user identifier extractd from the AuthInfoCookie should continue to use the same one.
+    if (userIdFromSession && nameFromCookie) {
+      if (__DEV__) logger.debug(`Extracted user name:${nameFromCookie}`)
+      return nameFromCookie
+    }
+
+    // For cases when AuthInfoCookie is not available
     if (userIdFromSession) {
       if (__DEV__) logger.debug(`Extracted user id from the session:${userIdFromSession}`)
       return userIdFromSession
     }
 
-    if (__DEV__) logger.debug('Could not extract user id from the session')
+    const userIdFromElement =
+        document.querySelector(USER_IDENTIFIER_SELECTOR)?.textContent?.trim()
+    if (userIdFromElement) {
+      if (__DEV__) {
+        logger.debug(`Extracted user id: ${userIdFromElement}.`)
+      }
+      return userIdFromElement
+    }
+
+    if (__DEV__) logger.error('Could not extract user id')
 
     return undefined
+  }
+
+  private getUserNameFromAuthInfoCookie (): string|undefined {
+    const prefix = `${AUTH_INFO_COOKIE_NAME}=`
+    const rawCookie =
+        document.cookie.split('; ').find(row => row.startsWith(prefix))
+    if (!rawCookie) {
+      return undefined
+    }
+    try {
+      const value = rawCookie.slice(prefix.length)
+      const data: AuthInfoCookie = JSON.parse(decodeURIComponent(value))
+      const name = data.user?.name
+      return typeof name === 'string' ? name.trim() || undefined : undefined
+    } catch (error) {
+      if (__DEV__) { logger.error(`Failed to parse ${AUTH_INFO_COOKIE_NAME} cookie:`, error) }
+      return undefined
+    }
   }
 
   protected getSiteScriptData ():
