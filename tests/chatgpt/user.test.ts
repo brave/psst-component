@@ -90,19 +90,39 @@ describe('ChatgptUserScript.getUserId', () => {
   });
 
   describe('session-based identity resolution', () => {
-    it('returns the session id when a session is present but the cookie is absent', () => {
+    it('returns the session name when a session is present but the cookie is absent', () => {
       mockClientBootstrap('session-user-id', 'session-user-name');
       mockDocumentCookie('');
       const querySelectorSpy = mockQuerySelector(null);
 
       const instance = new ChatgptUserScript();
-      expect(instance.getUserId()).toBe('session-user-id');
+      expect(instance.getUserId()).toBe('session-user-name');
       expect(querySelectorSpy).not.toHaveBeenCalled();
     });
 
-    it('returns the session id when the cookie is present but unparsable, without falling back to the DOM', () => {
+    it('returns the session name when the cookie is present but unparsable, without falling back to the DOM', () => {
       mockClientBootstrap('session-user-id', 'session-user-name');
       mockDocumentCookie(`${AUTH_INFO_COOKIE_NAME}=not-json`);
+      const querySelectorSpy = mockQuerySelector(null);
+
+      const instance = new ChatgptUserScript();
+      expect(instance.getUserId()).toBe('session-user-name');
+      expect(querySelectorSpy).not.toHaveBeenCalled();
+    });
+
+    it('returns the session name even when it differs from a stale cached cookie name', () => {
+      mockClientBootstrap('session-user-id', 'New Name');
+      mockDocumentCookie(authInfoCookie('Old Name'));
+      const querySelectorSpy = mockQuerySelector(null);
+
+      const instance = new ChatgptUserScript();
+      expect(instance.getUserId()).toBe('New Name');
+      expect(querySelectorSpy).not.toHaveBeenCalled();
+    });
+
+    it('returns the session id when the session has an id but no name', () => {
+      mockClientBootstrap('session-user-id', undefined);
+      mockDocumentCookie('');
       const querySelectorSpy = mockQuerySelector(null);
 
       const instance = new ChatgptUserScript();
@@ -126,16 +146,6 @@ describe('ChatgptUserScript.getUserId', () => {
 
       const instance = new ChatgptUserScript();
       expect(instance.getUserId()).toBe('DOM User');
-    });
-
-    it('prefers the session id over a stale cookie name when the session name has since changed', () => {
-      mockClientBootstrap('session-user-id', 'New Name');
-      mockDocumentCookie(authInfoCookie('Old Name'));
-      const querySelectorSpy = mockQuerySelector(null);
-
-      const instance = new ChatgptUserScript();
-      expect(instance.getUserId()).toBe('session-user-id');
-      expect(querySelectorSpy).not.toHaveBeenCalled();
     });
 
     it('falls back to the DOM when the client-bootstrap element contains invalid JSON', () => {

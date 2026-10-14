@@ -480,7 +480,15 @@ export class ChatgptUserScript extends UserScriptBase {
       return nameFromCookie
     }
 
-    // For cases when AuthInfoCookie is not available
+    // Try to use user name from session instead of extracted from AuthInfoCookie
+    if (userNameFromSession) {
+      if (__DEV__) {
+        logger.debug(`Extracted user name from the session:${userNameFromSession}`)
+      }
+      return userNameFromSession
+    }
+
+    // Try to use user id if name from session is not available
     if (userIdFromSession) {
       if (__DEV__) {
         logger.debug(`Extracted user id from the session:${userIdFromSession}`)
