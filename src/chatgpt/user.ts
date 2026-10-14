@@ -17,6 +17,15 @@ interface AuthInfoCookie {
   user?: { name?: string; };
 }
 
+interface SessionInfo {
+  session?: {
+    user?: {
+      id?: string;
+      name?: string;
+    };
+  };
+}
+
 const TOGGLE_LABELS = {
   improveTheModelForEveryone: [
     // English
@@ -440,16 +449,12 @@ const selectorFor = (kind: SwitchKind): string =>
 //     }
 //   }
 // }
-const getChatGptUserId = (): string | undefined => {
+const getChatGptUserId = (): SessionInfo | undefined => {
   try {
     const el = document.getElementById('client-bootstrap')
     if (!el?.textContent) return undefined
 
-    const data = JSON.parse(el.textContent) as {
-      session?: { user?: { id?: string } };
-    }
-
-    return data.session?.user?.id ?? undefined
+    return JSON.parse(el.textContent)
   } catch {
     return undefined
   }
@@ -463,17 +468,24 @@ export class ChatgptUserScript extends UserScriptBase {
   readonly policyScript: string = 'policy.js'
 
   getUserId (): string | undefined {
-    const userIdFromSession = getChatGptUserId()
+    const userSessionInfo = getChatGptUserId()
+    const userNameFromSession = userSessionInfo?.session?.user?.name
+    const userIdFromSession = userSessionInfo?.session?.user?.id
     const nameFromCookie = this.getUserNameFromAuthInfoCookie()
-    // Users that already use psst with user identifier extractd from the AuthInfoCookie should continue to use the same one.
-    if (userIdFromSession && nameFromCookie) {
+    if (__DEV__) logger.debug(`userNameFromSession:${userNameFromSession} userIdFromSession:${userIdFromSession} nameFromCookie:${nameFromCookie}`)
+    // Users that already use psst with user identifier extractd from the
+    // AuthInfoCookie should continue to use the same one.
+    if (nameFromCookie && userNameFromSession &&
+        userNameFromSession === nameFromCookie) {
       if (__DEV__) logger.debug(`Extracted user name:${nameFromCookie}`)
       return nameFromCookie
     }
 
     // For cases when AuthInfoCookie is not available
     if (userIdFromSession) {
-      if (__DEV__) logger.debug(`Extracted user id from the session:${userIdFromSession}`)
+      if (__DEV__) {
+        logger.debug(`Extracted user id from the session:${userIdFromSession}`)
+      }
       return userIdFromSession
     }
 
@@ -491,7 +503,7 @@ export class ChatgptUserScript extends UserScriptBase {
     return undefined
   }
 
-  private getUserNameFromAuthInfoCookie (): string|undefined {
+  private getUserNameFromAuthInfoCookie (): string | undefined {
     const prefix = `${AUTH_INFO_COOKIE_NAME}=`
     const rawCookie =
         document.cookie.split('; ').find(row => row.startsWith(prefix))

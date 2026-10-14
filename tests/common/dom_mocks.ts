@@ -3,15 +3,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
-import { vi, type MockInstance } from 'vitest';
+import { vi, type MockInstance } from 'vitest'
 
 /**
  * Mocks the `document.cookie` getter to return a fixed string, mirroring
  * what the injected scripts read on the live page. Restored by
  * `vi.restoreAllMocks()`.
  */
-export function mockDocumentCookie(cookieString: string): MockInstance {
-  return vi.spyOn(document, 'cookie', 'get').mockReturnValue(cookieString);
+export function mockDocumentCookie (cookieString: string): MockInstance {
+  return vi.spyOn(document, 'cookie', 'get').mockReturnValue(cookieString)
 }
 
 /**
@@ -19,8 +19,8 @@ export function mockDocumentCookie(cookieString: string): MockInstance {
  * mirroring how the injected scripts look up elements on the live page.
  * Restored by `vi.restoreAllMocks()`.
  */
-export function mockQuerySelector(result: Element | null): MockInstance {
-  return vi.spyOn(document, 'querySelector').mockReturnValue(result);
+export function mockQuerySelector (result: Element | null): MockInstance {
+  return vi.spyOn(document, 'querySelector').mockReturnValue(result)
 }
 
 /**
@@ -29,8 +29,8 @@ export function mockQuerySelector(result: Element | null): MockInstance {
  * `.mock.calls` while `mockDocumentCookie`'s getter override remains the
  * single source of truth for what the script reads back.
  */
-export function spyOnDocumentCookieWrites(): MockInstance {
-  return vi.spyOn(document, 'cookie', 'set');
+export function spyOnDocumentCookieWrites (): MockInstance {
+  return vi.spyOn(document, 'cookie', 'set')
 }
 
 /**
@@ -38,8 +38,8 @@ export function spyOnDocumentCookieWrites(): MockInstance {
  * subset of the DOM API the injected scripts actually read off a matched
  * element.
  */
-export function fakeElementWithText(textContent: string | null): Element {
-  return { textContent } as unknown as Element;
+export function fakeElementWithText (textContent: string | null): Element {
+  return { textContent } as unknown as Element
 }
 
 /**
@@ -49,9 +49,13 @@ export function fakeElementWithText(textContent: string | null): Element {
  * (`session.user.id`), or `undefined` to simulate the element being absent,
  * as it is when signed out. Restored by `vi.restoreAllMocks()`.
  */
-export function mockClientBootstrap(userId: string | undefined): MockInstance {
-  const element = userId === undefined
-    ? null
-    : ({ textContent: JSON.stringify({ session: { user: { id: userId } } }) } as unknown as HTMLElement);
-  return vi.spyOn(document, 'getElementById').mockReturnValue(element);
+export function mockClientBootstrap (
+  userId: string | undefined, userName: string | undefined): MockInstance {
+  if (!userId && !userName) {
+    return vi.spyOn(document, 'getElementById').mockReturnValue(null)
+  }
+  const element = {
+    textContent: JSON.stringify({ session: { user: { id: userId, name: userName } } })
+  } as unknown as HTMLElement
+  return vi.spyOn(document, 'getElementById').mockReturnValue(element)
 }

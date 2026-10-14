@@ -25,7 +25,7 @@ describe('ChatgptUserScript.getUserId', () => {
 
   describe('cookie extraction (oai-client-auth-info)', () => {
     it('returns the trimmed name from a well-formed cookie without falling back to the DOM', () => {
-      mockClientBootstrap('session-user-id');
+      mockClientBootstrap('session-user-id', 'Ada Lovelace');
       mockDocumentCookie(authInfoCookie(' Ada Lovelace '));
       const querySelectorSpy = mockQuerySelector(null);
 
@@ -35,7 +35,7 @@ describe('ChatgptUserScript.getUserId', () => {
     });
 
     it('picks the right cookie among several, ignoring similarly-named ones', () => {
-      mockClientBootstrap('session-user-id');
+      mockClientBootstrap('session-user-id', 'Real User');
       mockDocumentCookie(`${AUTH_INFO_COOKIE_NAME}-extra=bogus; foo=bar; ${authInfoCookie('Real User')}`);
       mockQuerySelector(null);
 
@@ -44,7 +44,7 @@ describe('ChatgptUserScript.getUserId', () => {
     });
 
     it('falls back to the DOM when the cookie is absent', () => {
-      mockClientBootstrap(undefined);
+      mockClientBootstrap(undefined, undefined);
       mockDocumentCookie('foo=bar; other=baz');
       mockQuerySelector(fakeElementWithText(' DOM User '));
 
@@ -53,7 +53,7 @@ describe('ChatgptUserScript.getUserId', () => {
     });
 
     it('falls back to the DOM when the cookie value is not valid JSON', () => {
-      mockClientBootstrap(undefined);
+      mockClientBootstrap(undefined, undefined);
       mockDocumentCookie(`${AUTH_INFO_COOKIE_NAME}=not-json`);
       mockQuerySelector(fakeElementWithText('DOM User'));
 
@@ -62,7 +62,7 @@ describe('ChatgptUserScript.getUserId', () => {
     });
 
     it('falls back to the DOM when the cookie JSON has no user.name', () => {
-      mockClientBootstrap(undefined);
+      mockClientBootstrap(undefined, undefined);
       mockDocumentCookie(`${AUTH_INFO_COOKIE_NAME}=${encodeURIComponent(JSON.stringify({ user: {} }))}`);
       mockQuerySelector(fakeElementWithText('DOM User'));
 
@@ -71,7 +71,7 @@ describe('ChatgptUserScript.getUserId', () => {
     });
 
     it('falls back to the DOM when user.name is not a string', () => {
-      mockClientBootstrap(undefined);
+      mockClientBootstrap(undefined, undefined);
       mockDocumentCookie(authInfoCookie(42));
       mockQuerySelector(fakeElementWithText('DOM User'));
 
@@ -80,7 +80,7 @@ describe('ChatgptUserScript.getUserId', () => {
     });
 
     it('falls back to the DOM when user.name is blank after trimming', () => {
-      mockClientBootstrap(undefined);
+      mockClientBootstrap(undefined, undefined);
       mockDocumentCookie(authInfoCookie('   '));
       mockQuerySelector(fakeElementWithText('DOM User'));
 
@@ -91,7 +91,7 @@ describe('ChatgptUserScript.getUserId', () => {
 
   describe('session-based identity resolution', () => {
     it('returns the session id when a session is present but the cookie is absent', () => {
-      mockClientBootstrap('session-user-id');
+      mockClientBootstrap('session-user-id', 'session-user-name');
       mockDocumentCookie('');
       const querySelectorSpy = mockQuerySelector(null);
 
@@ -101,7 +101,7 @@ describe('ChatgptUserScript.getUserId', () => {
     });
 
     it('returns the session id when the cookie is present but unparsable, without falling back to the DOM', () => {
-      mockClientBootstrap('session-user-id');
+      mockClientBootstrap('session-user-id', 'session-user-name');
       mockDocumentCookie(`${AUTH_INFO_COOKIE_NAME}=not-json`);
       const querySelectorSpy = mockQuerySelector(null);
 
@@ -111,7 +111,7 @@ describe('ChatgptUserScript.getUserId', () => {
     });
 
     it('does not use a stale cookie when there is no active session (avoids a false sign-in positive)', () => {
-      mockClientBootstrap(undefined);
+      mockClientBootstrap(undefined, undefined);
       mockDocumentCookie(authInfoCookie('Ada Lovelace'));
       mockQuerySelector(null);
 
@@ -120,8 +120,28 @@ describe('ChatgptUserScript.getUserId', () => {
     });
 
     it('falls back to the DOM when there is no active session and a stale cookie is present', () => {
-      mockClientBootstrap(undefined);
+      mockClientBootstrap(undefined, undefined);
       mockDocumentCookie(authInfoCookie('Ada Lovelace'));
+      mockQuerySelector(fakeElementWithText('DOM User'));
+
+      const instance = new ChatgptUserScript();
+      expect(instance.getUserId()).toBe('DOM User');
+    });
+
+    it('prefers the session id over a stale cookie name when the session name has since changed', () => {
+      mockClientBootstrap('session-user-id', 'New Name');
+      mockDocumentCookie(authInfoCookie('Old Name'));
+      const querySelectorSpy = mockQuerySelector(null);
+
+      const instance = new ChatgptUserScript();
+      expect(instance.getUserId()).toBe('session-user-id');
+      expect(querySelectorSpy).not.toHaveBeenCalled();
+    });
+
+    it('falls back to the DOM when the client-bootstrap element contains invalid JSON', () => {
+      vi.spyOn(document, 'getElementById').mockReturnValue(
+        { textContent: 'not-valid-json' } as unknown as HTMLElement);
+      mockDocumentCookie('');
       mockQuerySelector(fakeElementWithText('DOM User'));
 
       const instance = new ChatgptUserScript();
@@ -184,7 +204,7 @@ describe('ChatgptUserScript.getTasks', () => {
   });
 
   it('returns a UserScriptData object with the correct shape on success', () => {
-    mockClientBootstrap('session-user-id');
+    mockClientBootstrap('session-user-id', 'Ada Lovelace');
     mockDocumentCookie(authInfoCookie('Ada Lovelace'));
     mockQuerySelector(null);
 
