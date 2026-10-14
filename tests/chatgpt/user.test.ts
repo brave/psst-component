@@ -221,7 +221,8 @@ describe('ChatgptUserScript.getTasks', () => {
     expect(improveModelTask.uid).toBe('1');
     expect(improveModelTask.url).toBe('https://chatgpt.com/settings/data-controls');
     expect(improveModelTask.selector.event).toBe('click');
-    expect(improveModelTask.selector.selector).toMatch(/^button\[type="button"\]\[role="switch"\]:is\(.*\[aria-label\*="model"\].*\)$/);
+    expect(improveModelTask.selector.selector).toMatch(/^button\[type="button"\]\[role="switch"\]:is\(.*\)$/);
+    expect(improveModelTask.selector.selector).toContain(`[aria-label="${CSS.escape('Allow chats to improve the model')}"]`);
     expect(improveModelTask.modal_selectors).toBeUndefined();
     expect(improveModelTask.available_for_countries).toBeUndefined();
     expect(improveModelTask.turn_off).toBe(true);
@@ -230,7 +231,8 @@ describe('ChatgptUserScript.getTasks', () => {
     expect(measurementTask.uid).toBe('2');
     expect(measurementTask.url).toBe('https://chatgpt.com/settings/data-controls?view=marketing-privacy');
     expect(measurementTask.selector.event).toBe('click');
-    expect(measurementTask.selector.selector).toMatch(/^button\[type="button"\]\[role="switch"\]:is\(.*\[aria-label\*="measurement"\].*\)$/);
+    expect(measurementTask.selector.selector).toMatch(/^button\[type="button"\]\[role="switch"\]:is\(.*\)$/);
+    expect(measurementTask.selector.selector).toContain(`[aria-label="${CSS.escape('Allow marketing measurement')}"]`);
     expect(measurementTask.modal_selectors).toBeUndefined();
     expect(measurementTask.available_for_countries).toEqual(['us']);
     expect(measurementTask.turn_off).toBe(true);
@@ -239,7 +241,8 @@ describe('ChatgptUserScript.getTasks', () => {
     expect(personalizedTask.uid).toBe('3');
     expect(personalizedTask.url).toBe('https://chatgpt.com/settings/data-controls?view=marketing-privacy');
     expect(personalizedTask.selector.event).toBe('click');
-    expect(personalizedTask.selector.selector).toMatch(/^button\[type="button"\]\[role="switch"\]:is\(.*\[aria-label\*="personalized"\].*\)$/);
+    expect(personalizedTask.selector.selector).toMatch(/^button\[type="button"\]\[role="switch"\]:is\(.*\)$/);
+    expect(personalizedTask.selector.selector).toContain(`[aria-label="${CSS.escape('Allow personalized marketing')}"]`);
     expect(personalizedTask.modal_selectors).toBeUndefined();
     expect(personalizedTask.available_for_countries).toEqual(['us']);
     expect(personalizedTask.turn_off).toBe(true);
