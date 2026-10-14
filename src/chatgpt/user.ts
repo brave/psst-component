@@ -7,140 +7,130 @@ import type { UserScriptData } from '../common/declarations'
 import { logger } from '../common/logger'
 import { UserScriptBase } from '../common/user_base'
 
-// The display name rendered in the account menu is used as a fallback when
-// the oai-client-auth-info cookie is missing or unparsable.
-const USER_IDENTIFIER_SELECTOR =
-    '[data-testid="accounts-profile-button"] .truncate'
-const AUTH_INFO_COOKIE_NAME = 'oai-client-auth-info'
-
-interface AuthInfoCookie {
-  user?: {name?: string;};
-}
-
 const TOGGLE_LABELS = {
   improveTheModelForEveryone: [
     // English
-    ['chats', 'improve', 'model'],
+    ['Allow chats to improve the model'],
     // Albanian
-    ['bisedat', 'përmirësojnë', 'modelin'],
+    ['Lejo bisedat të përmirësojnë modelin'],
     // Armenian
-    ['Թույլատրել', 'օգտագործումը՝', 'բարելավելու'],
+    ['Թույլատրել զրույցների օգտագործումը՝ մոդելը բարելավելու համար'],
     // Bahasa Melayu
-    ['Benarkan', 'menambah', 'model'],
+    ['Benarkan sembang menambah baik model'],
     // bosanski
-    ['Dozvoli', 'razgovori', 'model'],
+    ['Dozvoli da razgovori poboljšaju model'],
     // Burmese
-    ['မော်ဒယ်ကို', 'များကို', 'အသုံးပြုခွင့်ပြုရန်'],
+    ['မော်ဒယ်ကို ပိုကောင်းစေရန် Chat များကို အသုံးပြုခွင့်ပြုရန်'],
     // català
-    ['Permet', 'converses', 'millorin', 'model'],
+    ['Permet que les converses millorin el model'],
     // čeština
-    ['Dovolit', 'chatů', 'vylepšování', 'modelu'],
+    ['Dovolit využití chatů k vylepšování modelu'],
     // dansk
-    ['Tillad', 'forbedrer', 'modellen'],
+    ['Tillad, at chats forbedrer modellen'],
     // Deutsch
-    ['Erlauben', 'Verbesserung', 'Modells'],
+    ['Erlauben, dass Chats zur Verbesserung des Modells beitragen'],
     // eesti
-    ['Luba', 'mudeli', 'täiustamiseks'],
+    ['Luba vestlusi mudeli täiustamiseks kasutada'],
     // español (España)
-    ['Permitir', 'mejoren', 'modelo'],
+    ['Permitir que los chats mejoren el modelo'],
     // español (Latinoamérica)
-    ['Permitir', 'mejoren', 'modelo'],
+    ['Permitir que los chats mejoren el modelo'],
     // Filipino
-    ['I-allow', 'ma-improve', 'model'],
+    ['I-allow ang mga chat para ma-improve ang model'],
     // français (Canada)
-    ['Autoriser', 'clavardages', 'améliorer', 'modèle'],
+    ['Autoriser l’utilisation des clavardages pour améliorer le modèle'],
     // français (France)
-    ['Autoriser', 'l’utilisation', 'améliorer', 'modèle'],
+    ['Autoriser l’utilisation des chats pour améliorer le modèle'],
     // Georgian
-    ['ჩატების', 'მოდელის', 'გასაუმჯობესებლად'],
+    ['ჩატების გამოყენების დაშვება მოდელის გასაუმჯობესებლად'],
     // hrvatski
-    ['Dopusti', 'razgovori', 'model'],
+    ['Dopusti da razgovori poboljšaju model'],
     // Icelandic
-    ['Leyfa', 'spjalla', 'bæta', 'líkanið'],
+    ['Leyfa notkun spjalla til að bæta líkanið'],
     // Indonesia
-    ['Izinkan', 'digunakan', 'meningkatkan', 'model'],
+    ['Izinkan obrolan digunakan untuk meningkatkan model'],
     // italiano
-    ['Consenti', 'migliorare', 'modello'],
+    ['Consenti alle chat di migliorare il modello'],
     // Kiswahili
-    ['Ruhusu', 'mazungumzo', 'yaboreshe', 'mfumo'],
+    ['Ruhusu mazungumzo yaboreshe mfumo'],
     // latviešu
-    ['Atļaut', 'tērzēšanas', 'modeļa', 'uzlabošanai'],
+    ['Atļaut izmantot tērzēšanas modeļa uzlabošanai'],
     // lietuvių
-    ['Leisti', 'pokalbius', 'modeliui', 'tobulinti'],
+    ['Leisti naudoti pokalbius modeliui tobulinti'],
     // Macedonian
-    ['Дозволи', 'разговорите', 'подобруваат', 'моделот'],
+    ['Дозволи разговорите да го подобруваат моделот'],
     // magyar
-    ['Csevegések', 'engedélyezése', 'modell', 'fejlesztéséhez'],
+    ['Csevegések felhasználásának engedélyezése a modell fejlesztéséhez'],
     // Mongolian
-    ['Чатуудыг', 'сайжруулахад', 'ашиглахыг', 'зөвшөөрөх'],
+    ['Чатуудыг загварыг сайжруулахад ашиглахыг зөвшөөрөх'],
     // Nederlands
-    ['Toestaan', 'chats', 'model', 'verbeteren'],
+    ['Toestaan dat chats het model verbeteren'],
     // norsk bokmål
-    ['Tillat', 'forbedrer', 'modellen'],
+    ['Tillat at samtaler forbedrer modellen'],
     // polski
-    ['Zezwalaj', 'ulepszały', 'model'],
+    ['Zezwalaj, by czaty ulepszały model'],
     // português (Brasil)
-    ['Permitir', 'melhorem', 'modelo'],
+    ['Permitir que os chats melhorem o modelo'],
     // português (Portugal)
-    ['Permitir', 'melhorem', 'modelo'],
+    ['Permitir que as conversas melhorem o modelo'],
     // română
-    ['Permite', 'îmbunătățească', 'modelul'],
+    ['Permite chaturilor să îmbunătățească modelul'],
     // slovenčina
-    ['Povoliť', 'zlepšovanie', 'modelu'],
+    ['Povoliť používanie četov na zlepšovanie modelu'],
     // slovenščina
-    ['Dovoli', 'izboljšajo', 'model'],
+    ['Dovoli, da klepeti izboljšajo model'],
     // Somali
-    ['oggolow', 'moodelka', 'horumariyaan'],
+    ['U oggolow wada-sheekeysiyada inay moodelka horumariyaan'],
     // suomi
-    ['Salli', 'keskusteluiden', 'parantamiseen'],
+    ['Salli keskusteluiden käyttö mallin parantamiseen'],
     // svenska
-    ['Tillåt', 'förbättrar', 'modellen'],
+    ['Tillåt att chattar förbättrar modellen'],
     // Tiếng Việt
-    ['phép', 'chuyện', 'thiện'],
+    ['Cho phép dùng nội dung trò chuyện để cải thiện mô hình'],
     // Türkçe
-    ['Modeli', 'iyileştirmek', 'sohbetlere'],
+    ['Modeli iyileştirmek için sohbetlere izin ver'],
     // Ελληνικά
-    ['επιτρέπεται', 'μοντέλου', 'συνομιλιών'],
+    ['Να επιτρέπεται η βελτίωση του μοντέλου μέσω συνομιλιών'],
     // български
-    ['Разрешаване', 'подобряват', 'модела'],
+    ['Разрешаване на чатовете да подобряват модела'],
     // қазақ тілі
-    ['Чаттарды', 'пайдалануға', 'рұқсат'],
+    ['Чаттарды модельді жақсарту үшін пайдалануға рұқсат ету'],
     // русский
-    ['Разрешить', 'чаты', 'модели'],
+    ['Разрешить использовать чаты для улучшения модели'],
     // српски
-    ['Дозволи', 'побољшају', 'модел'],
+    ['Дозволи да ћаскања побољшају модел'],
     // українська
-    ['Дозволити', 'чати', 'покращення'],
+    ['Дозволити використовувати чати для покращення моделі'],
     // اردو
-    ['چیٹس', 'بنانے', 'اجازت'],
+    ['چیٹس کو ماڈل بہتر بنانے کی اجازت دیں'],
     // العربية
-    ['السماح', 'للدردشات', 'النموذج'],
+    ['السماح للدردشات بتحسين النموذج'],
     // فارسی
-    ['اجازه', 'استفاده', 'بهبود'],
+    ['اجازه استفاده از چت‌ها برای بهبود مدل'],
     // አማርኛ
-    ['ውይይቶች', 'እንዲያሻሽሉ', 'ፍቀድ'],
+    ['ውይይቶች ሞዴሉን እንዲያሻሽሉ ፍቀድ'],
     // मराठी
-    ['मॉडेल', 'वापरण्याची', 'अनुमती'],
+    ['मॉडेल सुधारण्यासाठी चॅट्स वापरण्याची अनुमती द्या'],
     // हिन्दी
-    ['मॉडल', 'बनाने', 'अनुमति'],
+    ['मॉडल को बेहतर बनाने के लिए चैट की अनुमति दें'],
     // अनुमति
-    ['মডেল', 'ব্যবহারের', 'অনুমতি'],
+    ['মডেল উন্নত করতে চ্যাট ব্যবহারের অনুমতি দিন'],
     // ਪੰਜਾਬੀ
-    ['ਮਾਡਲ', 'ਬਣਾਉਣ', 'ਇਜਾਜ਼ਤ'],
+    ['ਮਾਡਲ ਨੂੰ ਬਿਹਤਰ ਬਣਾਉਣ ਲਈ ਚੈਟਾਂ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ'],
     // ગુજરાતી
-    ['મોડેલને', 'બનાવવા', 'ચૅટની'],
+    ['મોડેલને બહેતર બનાવવા માટે ચૅટની મંજૂરી આપો'],
     // தமிழ்
-    ['மாடலை', 'மேம்படுத்த', 'அரட்டைகளை'],
+    ['மாடலை மேம்படுத்த அரட்டைகளை அனுமதி'],
     // తెలుగు
-    ['మోడల్‌ను', 'చాట్‌లను', 'అనుమతించు'],
+    ['మోడల్‌ను మెరుగుపరచడానికి చాట్‌లను అనుమతించు'],
     // ಕನ್ನಡ
-    ['ಮಾದರಿಯನ್ನು', 'ಚಾಟ್‌ಗಳನ್ನು', 'ಅನುಮತಿಸಿ'],
+    ['ಮಾದರಿಯನ್ನು ಸುಧಾರಿಸಲು ಚಾಟ್‌ಗಳನ್ನು ಅನುಮತಿಸಿ'],
     // മലയാളം
-    ['മോഡൽ', 'മെച്ചപ്പെടുത്താൻ', 'അനുവദിക്കുക'],
+    ['മോഡൽ മെച്ചപ്പെടുത്താൻ ചാറ്റുകൾ അനുവദിക്കുക'],
     // ไทย
-    ['മോഡൽ', 'മെച്ചപ്പെടുത്താൻ', 'അനുവദിക്കുക'],
+    ['อนุญาตให้ใช้แชตเพื่อปรับปรุงโมเดล'],
     // 한국어
-    ['채팅을', '개선에', '사용하도록'],
+    ['채팅을 모델 개선에 사용하도록 허용'],
     // 日本語
     ['モデル改善へのチャット利用を許可'],
     // 简体中文
@@ -153,127 +143,123 @@ const TOGGLE_LABELS = {
   ],
   measurement: [
     // English
-    ['marketing', 'measurement'],
+    ['Allow marketing measurement'],
     // Albanian
-    ['matjen', 'marketingut'],
+    ['Lejo matjen e marketingut'],
     // Armenian
-    ['Թույլատրել', 'մարքեթինգային', 'արդյունավետության'],
+    ['Թույլատրել մարքեթինգային արդյունավետության չափումը'],
     // Bahasa Melayu
-    ['Benarkan', 'pengukuran', 'pemasaran'],
+    ['Benarkan pengukuran pemasaran'],
     // bosanski
-    ['Dozvoli', 'mjerenje', 'marketinga'],
+    ['Dozvoli mjerenje marketinga'],
     // Burmese
-    ['စျေးကွက်ရှာဖွေရေး', 'တိုင်းတာမှုကို', 'ခွင့်ပြုရန်'],
+    ['စျေးကွက်ရှာဖွေရေး တိုင်းတာမှုကို ခွင့်ပြုရန်'],
     // català
-    ['Permet', 'mesurament', 'màrqueting'],
+    ['Permet el mesurament de màrqueting'],
     // čeština
-    ['Dovolit', 'marketingové', 'měření'],
+    ['Dovolit marketingové měření'],
     // dansk
-    ['Tillad', 'marketingmåling'],
+    ['Tillad marketingmåling'],
     // Deutsch
-    ['Marketing', 'Messung', 'zulassen'],
+    ['Marketing-Messung zulassen'],
     // eesti
-    ['Luba', 'turunduse', 'mõõtmine'],
-    // español (España)
-    ['Permitir', 'medición', 'marketing'],
-    // español (Latinoamérica)
-    ['Permitir', 'medición', 'marketing'],
+    ['Luba turunduse mõõtmine'],
+    // español (España) or español (Latinoamérica)
+    ['Permitir la medición de marketing'],
     // Filipino
-    ['I-allow', 'marketing', 'measurement'],
-    // français (Canada)
-    ['Autoriser', 'mesure', 'marketing'],
-    // français (France)
-    ['Autoriser', 'mesure', 'marketing'],
+    ['I-allow ang marketing measurement'],
+    // français (Canada) or français (France)
+    ['Autoriser la mesure marketing'],
     // Georgian
-    ['მარკეტინგული', 'გაზომვის', 'დაშვება'],
+    ['მარკეტინგული გაზომვის დაშვება'],
     // hrvatski
-    ['Dopusti', 'marketinške', 'učinkovitosti'],
+    ['Dopusti mjerenje marketinške učinkovitosti'],
     // Icelandic
-    ['Leyfa', 'markaðsmælingar'],
+    ['Leyfa markaðsmælingar'],
     // Indonesia
-    ['Izinkan', 'pengukuran', 'pemasaran'],
+    ['Izinkan pengukuran pemasaran'],
     // italiano
-    ['Consenti', 'misurazione', 'marketing'],
+    ['Consenti la misurazione del marketing'],
     // Kiswahili
-    ['Ruhusu', 'upimaji', 'uuzaji'],
+    ['Ruhusu upimaji wa uuzaji'],
     // latviešu
-    ['Atļaut', 'mārketinga', 'mērījumus'],
+    ['Atļaut mārketinga mērījumus'],
     // lietuvių
-    ['Leisti', 'rinkodaros', 'vertinimą'],
+    ['Leisti rinkodaros vertinimą'],
     // Macedonian
-    ['Дозволи', 'мерење', 'маркетинг'],
+    ['Дозволи мерење на маркетинг'],
     // magyar
-    ['Marketingmérés', 'engedélyezése'],
+    ['Marketingmérés engedélyezése'],
     // Mongolian
-    ['Маркетингийн', 'үзүүлэлтийг', 'зөвшөөрөх'],
+    ['Маркетингийн үзүүлэлтийг зөвшөөрөх'],
     // Nederlands
-    ['Marketingmeting', 'toestaan'],
+    ['Marketingmeting toestaan'],
     // norsk bokmål
-    ['Tillat', 'markedsføringsmåling'],
+    ['Tillat markedsføringsmåling'],
     // polski
-    ['Zezwalaj', 'analitykę', 'marketingową'],
+    ['Zezwalaj na analitykę marketingową'],
     // português (Brasil)
-    ['Permitir', 'mensuração', 'marketing'],
+    ['Permitir mensuração de marketing'],
     // português (Portugal)
-    ['Permitir', 'medição', 'marketing'],
+    ['Permitir medição de marketing'],
     // română
-    ['Permite', 'măsurarea', 'marketing'],
+    ['Permite măsurarea de marketing'],
     // slovenčina
-    ['Povoliť', 'meranie', 'marketingu'],
+    ['Povoliť meranie marketingu'],
     // slovenščina
-    ['Dovoli', 'merjenje', 'trženja'],
+    ['Dovoli merjenje trženja'],
     // Somali
-    ['Oggolow', 'cabbirka', 'suuqgeynta'],
+    ['Oggolow cabbirka suuqgeynta'],
     // suomi
-    ['Salli', 'markkinoinnin', 'mittaus'],
+    ['Salli markkinoinnin mittaus'],
     // svenska
-    ['Tillåt', 'marknadsföringsmätning'],
+    ['Tillåt marknadsföringsmätning'],
     // Tiếng Việt
-    ['phép', 'lường', 'marketing'],
+    ['Cho phép đo lường marketing'],
     // Türkçe
-    ['Pazarlama', 'ölçümüne', 'izin'],
+    ['Pazarlama ölçümüne izin ver'],
     // Ελληνικά
-    ['επιτρέπονται', 'μετρήσεις', 'μάρκετινγκ'],
+    ['Να επιτρέπονται οι μετρήσεις μάρκετινγκ'],
     // български
-    ['Разрешаване', 'измерването', 'ефективност'],
+    ['Разрешаване на измерването на маркетинговата ефективност'],
     // қазақ тілі
-    ['Маркетинг', 'тиімділігін', 'рұқсат'],
+    ['Маркетинг тиімділігін өлшеуге рұқсат ету'],
     // русский
-    ['Разрешить', 'маркетинговые', 'метрики'],
+    ['Разрешить маркетинговые метрики'],
     // српски
-    ['Дозволи', 'маркетиншко', 'мерење'],
+    ['Дозволи маркетиншко мерење'],
     // українська
-    ['Дозволити', 'ефективності', 'маркетингу'],
+    ['Дозволити оцінювання ефективності маркетингу'],
     // اردو
-    ['مارکیٹنگ', 'پیمائش', 'اجازت'],
+    ['مارکیٹنگ کی پیمائش کی اجازت دیں'],
     // العربية
-    ['السماح', 'بقياس', 'التسويقي'],
+    ['السماح بقياس الأداء التسويقي'],
     // فارسی
-    ['اجازه', 'سنجش', 'بازاریابی'],
+    ['اجازه دادن به سنجش بازاریابی'],
     // አማርኛ
-    ['የማስታወቂያ', 'ልኬትን', 'ፍቀድ'],
+    ['የማስታወቂያ ልኬትን ፍቀድ'],
     // मराठी
-    ['मार्केटिंग', 'मापनाला', 'अनुमती'],
+    ['मार्केटिंग मापनाला अनुमती द्या'],
     // हिन्दी
-    ['मार्केटिंग', 'मेज़रमेंट', 'अनुमति'],
+    ['मार्केटिंग मेज़रमेंट की अनुमति दें'],
     // अनुमति
-    ['মার্কেটিং', 'অ্যানালিটিক্স', 'অনুমোদন'],
+    ['মার্কেটিং অ্যানালিটিক্স অনুমোদন করুন'],
     // ਪੰਜਾਬੀ
-    ['ਮਾਰਕੀਟਿੰਗ', 'ਇਜਾਜ਼ਤ', 'ਦਿਓ'],
+    ['ਮਾਰਕੀਟਿੰਗ ਮਾਪ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ'],
     // ગુજરાતી
-    ['માર્કેટિંગ', 'માપનની', 'આપો'],
+    ['માર્કેટિંગ માપનની મંજૂરી આપો'],
     // தமிழ்
-    ['மார்க்கெட்டிங்', 'அளவீட்டை', 'அனுமதிக்கவும்'],
+    ['மார்க்கெட்டிங் அளவீட்டை அனுமதிக்கவும்'],
     // తెలుగు
-    ['మార్కెటింగ్', 'కొలతను', 'అనుమతించు'],
+    ['మార్కెటింగ్ కొలతను అనుమతించు'],
     // ಕನ್ನಡ
-    ['ಮಾರ್ಕೆಟಿಂಗ್', 'ಮಾಪನವನ್ನು', 'ಅನುಮತಿಸಿ'],
+    ['ಮಾರ್ಕೆಟಿಂಗ್ ಮಾಪನವನ್ನು ಅನುಮತಿಸಿ'],
     // മലയാളം
-    ['വിപണന', 'മൂല്യനിർണ്ണയം', 'അനുവദിക്കുക'],
+    ['വിപണന മൂല്യനിർണ്ണയം അനുവദിക്കുക'],
     // ไทย
-    ['വിപണന', 'മൂല്യനിർണ്ണയം', 'അനുവദിക്കുക'],
+    ['อนุญาตการวัดผลการตลาด'],
     // 한국어
-    ['마케팅', '측정', '허용'],
+    ['마케팅 측정 허용'],
     // 日本語
     ['マーケティング測定を許可'],
     // 简体中文
@@ -286,125 +272,121 @@ const TOGGLE_LABELS = {
   ],
   personalized: [
     // English
-    ['personalized', 'marketing'],
+    ['Allow personalized marketing'],
     // Albanian
-    ['marketingun', 'personalizuar'],
+    ['Lejo marketingun e personalizuar'],
     // Armenian
-    ['Թույլատրել', 'անհատականացված', 'մարքեթինգը'],
+    ['Թույլատրել անհատականացված մարքեթինգը'],
     // Bahasa Melayu
-    ['Benarkan', 'pemasaran', 'diperibadikan'],
+    ['Benarkan pemasaran diperibadikan'],
     // bosanski
-    ['Dozvoli', 'personalizirani', 'marketing'],
+    ['Dozvoli personalizirani marketing'],
     // Burmese
-    ['စိတ်ကြိုက်ပြုလုပ်ထားသော', 'စျေးကွက်ရှာဖွေရေးကို', 'ခွင့်ပြုရန်'],
+    ['စိတ်ကြိုက်ပြုလုပ်ထားသော စျေးကွက်ရှာဖွေရေးကို ခွင့်ပြုရန်'],
     // català
-    ['Permet', 'màrqueting', 'personalitzat'],
+    ['Permet el màrqueting personalitzat'],
     // čeština
-    ['Dovolit', 'personalizovaný', 'marketing'],
+    ['Dovolit personalizovaný marketing'],
     // dansk
-    ['Tillad', 'tilpasset', 'markedsføring'],
+    ['Tillad tilpasset markedsføring'],
     // Deutsch
-    ['Personalisiertes', 'Marketing', 'zulassen'],
+    ['Personalisiertes Marketing zulassen'],
     // eesti
-    ['Luba', 'isikupärastatud', 'turundus'],
-    // español (España)
-    ['Permitir', 'marketing', 'personalizado'],
-    // español (Latinoamérica)
-    ['Permitir', 'marketing', 'personalizado'],
+    ['Luba isikupärastatud turundus'],
+    // español (España) or español (Latinoamérica)
+    ['Permitir marketing personalizado'],
     // Filipino
-    ['I-allow', 'naka-personalize', 'marketing'],
-    // français (Canada)
-    ['Autoriser', 'marketing', 'personnalisé'],
-    // français (France)
-    ['Autoriser', 'marketing', 'personnalisé'],
+    ['I-allow ang naka-personalize na marketing'],
+    // français (Canada) or français (France)
+    ['Autoriser le marketing personnalisé'],
     // Georgian
-    ['პერსონალიზებული', 'მარკეტინგის', 'დაშვება'],
+    ['პერსონალიზებული მარკეტინგის დაშვება'],
     // hrvatski
-    ['Dopusti', 'personalizirani', 'marketing'],
+    ['Dopusti personalizirani marketing'],
     // Icelandic
-    ['Leyfa', 'sérsniðna', 'markaðssetningu'],
+    ['Leyfa sérsniðna markaðssetningu'],
     // Indonesia
-    ['Izinkan', 'Pemasaran', 'Dipersonalisasi'],
+    ['Izinkan Pemasaran yang Dipersonalisasi'],
     // italiano
-    ['Consenti', 'marketing', 'personalizzato'],
+    ['Consenti marketing personalizzato'],
     // Kiswahili
-    ['Ruhusu', 'matangazo', 'yaliyobinafsishwa'],
+    ['Ruhusu matangazo yaliyobinafsishwa'],
     // latviešu
-    ['Atļaut', 'personalizētu', 'mārketingu'],
+    ['Atļaut personalizētu mārketingu'],
     // lietuvių
-    ['Leisti', 'personalizuotą', 'rinkodarą'],
+    ['Leisti personalizuotą rinkodarą'],
     // Macedonian
-    ['Дозволи', 'персонализиран', 'маркетинг'],
+    ['Дозволи персонализиран маркетинг'],
     // magyar
-    ['Személyre', 'marketing', 'engedélyezése'],
+    ['Személyre szabott marketing engedélyezése'],
     // Mongolian
-    ['тохирсон', 'маркетингийг', 'зөвшөөрөх'],
+    ['Хувь хүнд тохирсон маркетингийг зөвшөөрөх'],
     // Nederlands
-    ['Gepersonaliseerde', 'marketing', 'toestaan'],
+    ['Gepersonaliseerde marketing toestaan'],
     // norsk bokmål
-    ['Tillat', 'persontilpasset', 'markedsføring'],
+    ['Tillat persontilpasset markedsføring'],
     // polski
-    ['Zezwalaj', 'spersonalizowany', 'marketing'],
-    // português (Brasil)
-    ['Permitir', 'marketing', 'personalizado'],
-    // português (Portugal)
-    ['Permitir', 'marketing', 'personalizado'],
+    ['Zezwalaj na spersonalizowany marketing'],
+    // português (Brasil) or português (Portugal)
+    ['Permitir marketing personalizado'],
     // română
-    ['Permite', 'marketingul', 'personalizat'],
+    ['Permite marketingul personalizat'],
     // slovenčina
-    ['Povoliť', 'personalizovaný', 'marketing'],
+    ['Povoliť personalizovaný marketing'],
     // slovenščina
-    ['Dovoli', 'prilagojeno', 'trženje'],
+    ['Dovoli prilagojeno trženje'],
     // Somali
-    ['Oggolow', 'suuq-geyn', 'shakhsiyeeysan'],
+    ['Oggolow suuq-geyn shakhsiyeeysan'],
     // suomi
-    ['Salli', 'personoitu', 'markkinointi'],
+    ['Salli personoitu markkinointi'],
     // svenska
-    ['Tillåt', 'personlig', 'marknadsföring'],
+    ['Tillåt personlig marknadsföring'],
     // Tiếng Việt
-    ['phép', 'marketing', 'nhân'],
+    ['Cho phép marketing cá nhân hóa'],
     // Türkçe
-    ['Kişiselleştirilmiş', 'pazarlamaya', 'izin'],
+    ['Kişiselleştirilmiş pazarlamaya izin ver'],
     // Ελληνικά
-    ['επιτρέπεται', 'εξατομικευμένο', 'μάρκετινγκ'],
+    ['Να επιτρέπεται το εξατομικευμένο μάρκετινγκ'],
     // български
-    ['Разрешаване', 'персонализиран', 'маркетинг'],
+    ['Разрешаване на персонализиран маркетинг'],
     // қазақ тілі
-    ['Жекелендірілген', 'маркетингке', 'рұқсат'],
+    ['Жекелендірілген маркетингке рұқсат ету'],
     // русский
-    ['Разрешить', 'персонализированный', 'маркетинг'],
+    ['Разрешить персонализированный маркетинг'],
     // српски
-    ['Дозволи', 'персонализован', 'маркетинг'],
+    ['Дозволи персонализован маркетинг'],
     // українська
-    ['Дозволити', 'ефективності', 'маркетингу'],
+    ['Дозволити персоналізований маркетинг'],
     // اردو
-    ['نوعیت', 'مارکیٹنگ', 'اجازت'],
+    ['ذاتی نوعیت کی مارکیٹنگ کی اجازت دیں'],
     // العربية
-    ['السماح', 'بالتسويق', 'المخصص'],
+    ['السماح بالتسويق المخصص'],
     // فارسی
-    ['اجازه', 'بازاریابی', 'شخصی‌سازی‌شده'],
+    ['اجازه دادن به بازاریابی شخصی‌سازی‌شده'],
     // አማርኛ
-    ['ግላዊ', 'ማስታወቂያ', 'ፍቀድ'],
+    ['ግላዊ የሆነ ማስታወቂያ ፍቀድ'],
     // मराठी
-    ['वैयक्तिकृत', 'मार्केटिंगला', 'अनुमती'],
+    ['वैयक्तिकृत मार्केटिंगला अनुमती द्या'],
     // हिन्दी
-    ['पर्सनलाइज़्ड', 'मार्केटिंग', 'अनुमति'],
+    ['पर्सनलाइज़्ड मार्केटिंग की अनुमति दें'],
     // अनुमति
-    ['পার্সোনালাইজড', 'অনুমোদন', 'করুন'],
+    ['পার্সোনালাইজড মার্কেটিং অনুমোদন করুন'],
     // ਪੰਜਾਬੀ
-    ['ਵਿਅਕਤੀਗਤ', 'ਮਾਰਕੀਟਿੰਗ', 'ਇਜਾਜ਼ਤ'],
+    ['ਵਿਅਕਤੀਗਤ ਮਾਰਕੀਟਿੰਗ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ'],
     // ગુજરાતી
-    ['પર્સનલાઇઝ', 'માર્કેટિંગને', 'આપો'],
+    ['પર્સનલાઇઝ કરેલ માર્કેટિંગને મંજૂરી આપો'],
     // தமிழ்
-    ['பிரத்தியேக', 'மார்க்கெட்டிங்கை', 'அனுமதிக்கவும்'],
+    ['பிரத்தியேக மார்க்கெட்டிங்கை அனுமதிக்கவும்'],
     // తెలుగు
-    ['వ్యక్తిగతీకరించిన', 'మార్కెటింగ్‌ను', 'అనుమతించు'],
+    ['వ్యక్తిగతీకరించిన మార్కెటింగ్‌ను అనుమతించు'],
     // ಕನ್ನಡ
-    ['ವೈಯಕ್ತೀಕರಿಸಿದ', 'ಮಾರ್ಕೆಟಿಂಗ್', 'ಅನುಮತಿಸಿ'],
+    ['ವೈಯಕ್ತೀಕರಿಸಿದ ಮಾರ್ಕೆಟಿಂಗ್ ಅನ್ನು ಅನುಮತಿಸಿ'],
     // മലയാളം
-    ['വ്യക്തിപരമാക്കിയ', 'മാർക്കറ്റിംഗ്', 'അനുവദിക്കുക'],
+    ['വ്യക്തിപരമാക്കിയ മാർക്കറ്റിംഗ് അനുവദിക്കുക'],
+    // ไทย
+    ['อนุญาตการตลาดแบบเฉพาะบุคคล'],
     // 한국어
-    ['맞춤형', '마케팅', '허용'],
+    ['맞춤형 마케팅 허용'],
     // 日本語
     ['パーソナライズされたマーケティングを許可'],
     // 简体中文
@@ -417,13 +399,14 @@ const TOGGLE_LABELS = {
   ]
 
 }
-type SwitchKind = keyof typeof TOGGLE_LABELS;
+
+type SwitchKind = keyof typeof TOGGLE_LABELS
 
 const selectorFor = (kind: SwitchKind): string =>
     `button[type="button"][role="switch"]:is(${
         TOGGLE_LABELS[kind]
-            .map(l => l.map(item => `[aria-label*="${CSS.escape(item)}"]`))
-            .join('')})`
+            .map(l => l.map(item => `[aria-label="${CSS.escape(item)}"]`))
+            .join(',')})`
 
 // Extracts user identifier from the website session data,
 // stored in the script element.
@@ -469,54 +452,20 @@ export class ChatgptUserScript extends UserScriptBase {
   readonly userScript: string = 'user.js'
   readonly policyScript: string = 'policy.js'
 
-  getUserId (): string|undefined {
-    const nameFromCookie = this.getUserNameFromAuthInfoCookie()
-    if (nameFromCookie) {
-      if (__DEV__) logger.debug(`Extracted user name:${nameFromCookie}`)
-      return nameFromCookie
-    }
-
+  getUserId (): string | undefined {
     const userIdFromSession = getChatGptUserId()
     if (userIdFromSession) {
       if (__DEV__) logger.debug(`Extracted user id from the session:${userIdFromSession}`)
       return userIdFromSession
     }
 
-    const userElement = document.querySelector(USER_IDENTIFIER_SELECTOR)
-    if (!userElement || !userElement.textContent) {
-      if (__DEV__) {
-        logger.error(`User identifier element not found for selector ${
-            USER_IDENTIFIER_SELECTOR}.`)
-      }
-      return undefined
-    }
-    if (__DEV__) {
-      logger.debug(
-          `userElement.textContent:${userElement?.textContent ?? 'N/A'}`)
-    }
-    return userElement.textContent.trim() || undefined
-  }
+    if (__DEV__) logger.debug('Could not extract user id from the session')
 
-  private getUserNameFromAuthInfoCookie (): string|undefined {
-    const prefix = `${AUTH_INFO_COOKIE_NAME}=`
-    const rawCookie =
-        document.cookie.split('; ').find(row => row.startsWith(prefix))
-    if (!rawCookie) {
-      return undefined
-    }
-    try {
-      const value = rawCookie.slice(prefix.length)
-      const data: AuthInfoCookie = JSON.parse(decodeURIComponent(value))
-      const name = data.user?.name
-      return typeof name === 'string' ? name.trim() || undefined : undefined
-    } catch (error) {
-      if (__DEV__) { logger.error(`Failed to parse ${AUTH_INFO_COOKIE_NAME} cookie:`, error) }
-      return undefined
-    }
+    return undefined
   }
 
   protected getSiteScriptData ():
-      Omit<UserScriptData, 'user_id'|'initial_execution'> {
+  Omit<UserScriptData, 'user_id' | 'initial_execution'> {
     return {
       share_experience_link: '',
       site_name: 'chatgpt.com',
