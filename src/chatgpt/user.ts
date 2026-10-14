@@ -472,7 +472,6 @@ export class ChatgptUserScript extends UserScriptBase {
     const userNameFromSession = userSessionInfo?.session?.user?.name
     const userIdFromSession = userSessionInfo?.session?.user?.id
     const nameFromCookie = this.getUserNameFromAuthInfoCookie()
-    if (__DEV__) logger.debug(`userNameFromSession:${userNameFromSession} userIdFromSession:${userIdFromSession} nameFromCookie:${nameFromCookie}`)
     // Users that already use psst with user identifier extractd from the
     // AuthInfoCookie should continue to use the same one.
     if (nameFromCookie && userNameFromSession &&
