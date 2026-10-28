@@ -461,71 +461,72 @@ const getChatGptUserId = (): SessionInfo | undefined => {
 }
 
 export class ChatgptUserScript extends UserScriptBase {
-    readonly version = 4;
-    readonly includeUrlPatterns: string[] = ['https://chatgpt.com/*'];
-    readonly excludeUrlPatterns: string[] = [];
-    readonly userScript: string = 'user.js';
-    readonly policyScript: string = 'policy.js';
+  readonly version = 7
+  readonly includeUrlPatterns: string[] = ['https://chatgpt.com/*']
+  readonly excludeUrlPatterns: string[] = []
+  readonly userScript: string = 'user.js'
+  readonly policyScript: string = 'policy.js'
 
-    getUserId(): string | undefined {
-        const userSessionInfo = getChatGptUserId()
-        const userNameFromSession = userSessionInfo?.session?.user?.name
-        const userIdFromSession = userSessionInfo?.session?.user?.id
-        const nameFromCookie = this.getUserNameFromAuthInfoCookie();
-        // Users that already use psst with user identifier extractd from the
-        // AuthInfoCookie should continue to use the same one.
-        if (nameFromCookie && userNameFromSession &&
-            userNameFromSession === nameFromCookie) {
-          if (__DEV__) logger.debug(`Extracted user name:${nameFromCookie}`)
-          return nameFromCookie
-        }
-
-        // Try to use user name from session instead of extracted from AuthInfoCookie
-        if (userNameFromSession) {
-          if (__DEV__) {
-            logger.debug(`Extracted user name from the session:${userNameFromSession}`)
-          }
-          return userNameFromSession
-        }
-
-        // Try to use user id if name from session is not available
-        if (userIdFromSession) {
-          if (__DEV__) {
-            logger.debug(`Extracted user id from the session:${userIdFromSession}`)
-          }
-          return userIdFromSession
-        }
-
-        const userIdFromElement =
-            document.querySelector(USER_IDENTIFIER_SELECTOR)?.textContent?.trim()
-        if (userIdFromElement) {
-          if (__DEV__) {
-            logger.debug(`Extracted user id: ${userIdFromElement}.`)
-          }
-          return userIdFromElement
-        }
-
-        if (__DEV__) logger.error('Could not extract user id')
-
-        return undefined
+  getUserId (): string | undefined {
+    const userSessionInfo = getChatGptUserId()
+    const userNameFromSession = userSessionInfo?.session?.user?.name
+    const userIdFromSession = userSessionInfo?.session?.user?.id
+    const nameFromCookie = this.getUserNameFromAuthInfoCookie()
+    // Users that already use psst with user identifier extractd from the
+    // AuthInfoCookie should continue to use the same one.
+    if (nameFromCookie && userNameFromSession &&
+        userNameFromSession === nameFromCookie) {
+      if (__DEV__) logger.debug(`Extracted user name:${nameFromCookie}`)
+      return nameFromCookie
     }
 
-    private getUserNameFromAuthInfoCookie(): string | undefined {
-        const prefix = `${AUTH_INFO_COOKIE_NAME}=`;
-        const rawCookie = document.cookie.split('; ').find(row => row.startsWith(prefix));
-        if (!rawCookie) {
-            return undefined;
-        }
-        try {
-            const value = rawCookie.slice(prefix.length);
-            const data: AuthInfoCookie = JSON.parse(decodeURIComponent(value));
-            const name = data.user?.name;
-            return typeof name === 'string' ? name.trim() || undefined : undefined;
-        } catch (error) {
-            if (__DEV__) logger.error(`Failed to parse ${AUTH_INFO_COOKIE_NAME} cookie:`, error);
-            return undefined;
-        }
+    // Try to use user name from session instead of extracted from AuthInfoCookie
+    if (userNameFromSession) {
+      if (__DEV__) {
+        logger.debug(`Extracted user name from the session:${userNameFromSession}`)
+      }
+      return userNameFromSession
     }
+
+    // Try to use user id if name from session is not available
+    if (userIdFromSession) {
+      if (__DEV__) {
+        logger.debug(`Extracted user id from the session:${userIdFromSession}`)
+      }
+      return userIdFromSession
+    }
+
+    const userIdFromElement =
+        document.querySelector(USER_IDENTIFIER_SELECTOR)?.textContent?.trim()
+    if (userIdFromElement) {
+      if (__DEV__) {
+        logger.debug(`Extracted user id: ${userIdFromElement}.`)
+      }
+      return userIdFromElement
+    }
+
+    if (__DEV__) logger.error('Could not extract user id')
+
+    return undefined
+  }
+
+  private getUserNameFromAuthInfoCookie (): string | undefined {
+    const prefix = `${AUTH_INFO_COOKIE_NAME}=`
+    const rawCookie =
+        document.cookie.split('; ').find(row => row.startsWith(prefix))
+    if (!rawCookie) {
+      return undefined
+    }
+    try {
+      const value = rawCookie.slice(prefix.length)
+      const data: AuthInfoCookie = JSON.parse(decodeURIComponent(value))
+      const name = data.user?.name
+      return typeof name === 'string' ? name.trim() || undefined : undefined
+    } catch (error) {
+      if (__DEV__) { logger.error(`Failed to parse ${AUTH_INFO_COOKIE_NAME} cookie:`, error) }
+      return undefined
+    }
+  }
 
   protected getSiteScriptData ():
   Omit<UserScriptData, 'user_id' | 'initial_execution'> {
