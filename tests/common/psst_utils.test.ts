@@ -156,10 +156,10 @@ describe('isInitialExecution', () => {
     expect(isInitialExecution()).toBe(true);
   });
 
-  it('returns false when only the pathname differs but the origin matches', () => {
+  it('returns true when only the pathname differs even though the origin matches', () => {
     storeStartedFlow({ start_url: new URL('/other-page', CURRENT_URL).toString() });
 
-    expect(isInitialExecution()).toBe(false);
+    expect(isInitialExecution()).toBe(true);
   });
 
   it('returns true when the stored origin differs from the current page', () => {
@@ -174,18 +174,13 @@ describe('isInitialExecution', () => {
     expect(isInitialExecution()).toBe(true);
   });
 
-  it('returns false when redirected to an unrelated same-origin page while a task is active', () => {
-    // Both start_url and current_task.url point elsewhere, and we land on
-    // CURRENT_URL instead. This models a site redirecting current_task.url
-    // to a fallback page (e.g. an unavailable-setting "page not found")
-    // rather than the flow having been abandoned, so it should not force a
-    // full restart - the task-level timeout in applyPolicies() handles it.
+  it('returns true when redirected to an unrelated same-origin page while a task is active', () => {
     storeStartedFlow({
       start_url: new URL('/original-settings-page', CURRENT_URL).toString(),
       current_task: makeTask({ url: new URL('/task-step', CURRENT_URL).toString() })
     });
 
-    expect(isInitialExecution()).toBe(false);
+    expect(isInitialExecution()).toBe(true);
   });
 
   it('returns true when a redirect takes us to a different origin even with an active task', () => {

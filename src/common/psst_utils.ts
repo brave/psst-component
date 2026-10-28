@@ -47,15 +47,36 @@ export const PSST_STORAGE_KEY = 'psst';
  */
 const PSST_STALE_MS = 40_000;
 
+/**
+ * List of the allowed fallback pages
+ */
+const fallbackUrls: URL[] = [
+  new URL('https://www.linkedin.com/mypreferences/page-not-found'),
+];
+
+/**
+ * Checks whether the current page is one of the known fallback pages.
+ *
+ * @returns {boolean} `true` if the current page is a fallback page, `false`
+ *     otherwise
+ */
+export const isFallbackPage =
+    () => {
+      return fallbackUrls.some(u => u.href === location.href);
+    }
+
 const isOnExpectedLocation =
     (psst: Pick<PsstData, 'current_task'|'start_url'>): boolean => {
       const expected = psst.current_task?.url || psst.start_url || undefined;
       if (!expected) {
         return false;
       }
+
       try {
         const target = new URL(expected);
-        return target.origin === location.origin;
+        return isFallbackPage() ||
+            (target.origin === location.origin &&
+             target.pathname === location.pathname);
       } catch {
         return false;
       }
@@ -97,7 +118,7 @@ export const isInitialExecution =
 
         if (!isNotExpired || !onExpectedLocation) {
           if (__DEV__)
-            logger.debug(`Detected broken PSST flow; expired:${
+            logger.debug(`Detected the initial execution; expired:${
                 !isNotExpired} wrong step: ${!onExpectedLocation}`);
           return true;
         }

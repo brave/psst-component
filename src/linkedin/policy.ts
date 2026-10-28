@@ -6,12 +6,12 @@
 
 import { PolicyScriptBase } from "../common/policy_base";
 import {logger} from '../common/logger';
-import { waitForElementWithRetry, type ModalSelectorData } from "../common/psst_utils";
+import { isFallbackPage, waitForElementWithRetry, type ModalSelectorData } from "../common/psst_utils";
 
 export class LinkedInPolicyScript extends PolicyScriptBase {
     async waitForSettingAppliedWithTimeout(selectorData: ModalSelectorData | undefined, turnOff: boolean, modalSelectors: ModalSelectorData[] | undefined): Promise<void> {
         const targetSelector = selectorData?.selector;
-        if (!this.isFallbackPage() && targetSelector) {
+        if (!isFallbackPage() && targetSelector) {
             if (__DEV__) logger.debug(`Starts to wait for element:${targetSelector} on the page: ${location.href}`);
             await waitForElementWithRetry(targetSelector);
         }
@@ -28,7 +28,7 @@ export class LinkedInPolicyScript extends PolicyScriptBase {
             const wrappedReject = (errorDescription: string|null = null) => {
               attemptCount++;
 
-              if (this.isFallbackPage()) {
+              if (isFallbackPage()) {
                 const message = 'Skipped fallback page';
                 if (__DEV__) logger.debug(message);
                 if (intervalId) clearInterval(intervalId);
@@ -71,13 +71,6 @@ export class LinkedInPolicyScript extends PolicyScriptBase {
             }
         }
         resolve();
-    }
-
-    private readonly fallbackUrls: URL[] = [
-      new URL('https://www.linkedin.com/mypreferences/page-not-found'),
-    ];
-    private isFallbackPage(): boolean {
-      return this.fallbackUrls.some(u => u.href === location.href);
     }
 }
 
