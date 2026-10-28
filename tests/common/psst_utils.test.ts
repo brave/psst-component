@@ -156,10 +156,10 @@ describe('isInitialExecution', () => {
     expect(isInitialExecution()).toBe(true);
   });
 
-  it('returns true when the stored pathname differs from the current page', () => {
+  it('returns false when only the pathname differs but the origin matches', () => {
     storeStartedFlow({ start_url: new URL('/other-page', CURRENT_URL).toString() });
 
-    expect(isInitialExecution()).toBe(true);
+    expect(isInitialExecution()).toBe(false);
   });
 
   it('returns true when the stored origin differs from the current page', () => {
