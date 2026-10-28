@@ -47,49 +47,16 @@ export const PSST_STORAGE_KEY = 'psst';
  */
 const PSST_STALE_MS = 40_000;
 
-const isOnExpectedStep =
+const isOnExpectedLocation =
     (psst: Pick<PsstData, 'current_task'|'start_url'>): boolean => {
       const expected = psst.current_task?.url || psst.start_url || undefined;
       if (!expected) {
         return false;
       }
       try {
-        const target = new URL(expected, location.href);
-        const onExactStep = target.origin === location.origin &&
-            target.pathname === location.pathname;
-        if (__DEV__)
-          logger.debug(`isOnExpectedStep 100 \n\texpected:${
-              expected} \n\tonExactStep:${onExactStep} \n\ttarget:${
-              target} \n\tlocation:${location} \n\tparam1:${
-              (target.origin === location.origin)} \n\tparam2:${
-              (target.pathname === location.pathname)} \n\ttarget.pathname:${
-              target.pathname} \n\tlocation.pathname:${location.pathname}`);
-
-        if (onExactStep || target.origin !== location.origin ||
-            !psst.current_task) {
-          if (__DEV__)
-            logger.debug(`isOnExpectedStep 200 \n\tonExactStep:${onExactStep} ${target.origin !== location.origin} ${!psst.current_task}`);
-          return onExactStep;
-        }
-
-        // Same-origin mismatch while a task is active: the host navigated us
-        // here to drive current_task, but the site redirected elsewhere
-        // (e.g. an unavailable-page fallback). Only treat this as a broken
-        // flow if we've regressed back to the flow's start page; otherwise
-        // let applyPolicies()'s own per-task timeout decide whether to skip
-        // this task, instead of restarting the whole flow from scratch.
-        if (!psst.start_url) {
-          return true;
-        }
-        const start = new URL(psst.start_url, location.href);
-        const regressedToStart = start.origin === location.origin &&
-            start.pathname === location.pathname;
-        if (__DEV__)
-          logger.debug(`isOnExpectedStep 300 \n\tonExactStep:${onExactStep} ${target.origin !== location.origin} ${!psst.current_task}`);
-        return !regressedToStart;
-      } catch (error) {
-        if (__DEV__)
-          logger.debug(`isOnExpectedStep failed:${error}`);
+        const target = new URL(expected);
+        return target.origin === location.origin;
+      } catch {
         return false;
       }
     };
@@ -97,15 +64,11 @@ const isOnExpectedStep =
 export const isInitialExecution =
     () => {
       if (typeof sessionStorage === 'undefined') {
-        if (__DEV__)
-          logger.debug(`isInitialExecution 100 true`);
         return true;
       }
 
       const stored = sessionStorage.getItem(PSST_STORAGE_KEY);
       if (stored === null) {
-        if (__DEV__)
-          logger.debug(`isInitialExecution 200 true`);
         return true;
       }
 
@@ -116,8 +79,6 @@ export const isInitialExecution =
         // Not an active run (completed, missing, or unknown state) → start
         // fresh flow.
         if (parsed?.state !== PsstState.STARTED) {
-          if (__DEV__)
-            logger.debug(`isInitialExecution 300 true`);
           return true;
         }
 
@@ -129,15 +90,15 @@ export const isInitialExecution =
             NaN;
         const isNotExpired = age >= 0 && age <= PSST_STALE_MS;
 
-        const onExpectedStep = isOnExpectedStep({
+        const onExpectedLocation = isOnExpectedLocation({
           current_task: parsed.current_task,
           start_url: parsed.start_url ?? '',
         });
 
-        if (!isNotExpired || !onExpectedStep) {
+        if (!isNotExpired || !onExpectedLocation) {
           if (__DEV__)
             logger.debug(`Detected broken PSST flow; expired:${
-                !isNotExpired} wrong step: ${!onExpectedStep}`);
+                !isNotExpired} wrong step: ${!onExpectedLocation}`);
           return true;
         }
 
