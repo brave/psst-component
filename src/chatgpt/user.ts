@@ -476,36 +476,30 @@ export class ChatgptUserScript extends UserScriptBase {
     // AuthInfoCookie should continue to use the same one.
     if (nameFromCookie && userNameFromSession &&
         userNameFromSession === nameFromCookie) {
-      if (__DEV__) logger.debug(`Extracted user name:${nameFromCookie}`)
+      logger.debug(`Extracted user name:${nameFromCookie}`)
       return nameFromCookie
     }
 
     // Try to use user name from session instead of extracted from AuthInfoCookie
     if (userNameFromSession) {
-      if (__DEV__) {
-        logger.debug(`Extracted user name from the session:${userNameFromSession}`)
-      }
+      logger.debug(`Extracted user name from the session:${userNameFromSession}`)
       return userNameFromSession
     }
 
     // Try to use user id if name from session is not available
     if (userIdFromSession) {
-      if (__DEV__) {
-        logger.debug(`Extracted user id from the session:${userIdFromSession}`)
-      }
+      logger.debug(`Extracted user id from the session:${userIdFromSession}`)
       return userIdFromSession
     }
 
     const userIdFromElement =
         document.querySelector(USER_IDENTIFIER_SELECTOR)?.textContent?.trim()
     if (userIdFromElement) {
-      if (__DEV__) {
-        logger.debug(`Extracted user id: ${userIdFromElement}.`)
-      }
+      logger.debug(`Extracted user id: ${userIdFromElement}.`)
       return userIdFromElement
     }
 
-    if (__DEV__) logger.error('Could not extract user id')
+    logger.error('Could not extract user id')
 
     return undefined
   }
@@ -523,7 +517,7 @@ export class ChatgptUserScript extends UserScriptBase {
       const name = data.user?.name
       return typeof name === 'string' ? name.trim() || undefined : undefined
     } catch (error) {
-      if (__DEV__) { logger.error(`Failed to parse ${AUTH_INFO_COOKIE_NAME} cookie:`, error) }
+      logger.error(`Failed to parse ${AUTH_INFO_COOKIE_NAME} cookie:`, error)
       return undefined
     }
   }

@@ -118,8 +118,8 @@ Import the logger and **always guard the call site with `if (__DEV__)`**:
 ```ts
 import { logger } from "../common/logger";
 
-if (__DEV__) logger.debug('applying task', task);
-if (__DEV__) logger.error('Failed to save PsstData to sessionStorage:', error);
+logger.debug('applying task', task);
+logger.error('Failed to save PsstData to sessionStorage:', error);
 ```
 
 Available methods: `logger.log`, `logger.info`, `logger.warn`, `logger.error`, `logger.debug`. Messages are automatically prefixed with `[psst]`.

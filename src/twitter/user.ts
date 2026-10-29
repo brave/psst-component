@@ -36,8 +36,7 @@ export class TwitterUserScript extends UserScriptBase {
     const twidCookie = document.cookie.split('; ').find(
         row => row.startsWith(TWID_COOKIE_NAME + '='));
     if (!twidCookie) {
-      if (__DEV__)
-        logger.error(`Cookie with name ${TWID_COOKIE_NAME} not found.`);
+      logger.error(`Cookie with name ${TWID_COOKIE_NAME} not found.`);
       return undefined;
     }
     const [, value] = twidCookie.split('=');

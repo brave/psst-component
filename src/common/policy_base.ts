@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Brave Authors. All rights reserved.
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
-// You can obtain one at https://mozilla.org/MPL/2.0/
+// You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import type {PolicyScriptInputData} from './declarations';
 import {logger} from './logger';
@@ -26,8 +26,7 @@ export abstract class PolicyScriptBase {
     abstract waitForSettingAppliedWithTimeout(selector: ModalSelectorData | undefined, turn_off: boolean, modal_selectors: ModalSelectorData[] | undefined): Promise<void>;
 
   async applyPolicies(): Promise<PolicyScriptResult> {
-    if (__DEV__)
-      logger.info('Starting applyPolicies with params:', JSON.stringify(this.params));
+    logger.info('Starting applyPolicies with params:', this.params);
     const psstObj = this.loadPsstDataFromStorage();
     if (!psstObj || this.getParams().initial_execution) {
       const firstTask = this.getParams().tasks[0];
@@ -60,6 +59,7 @@ export abstract class PolicyScriptBase {
           selector, current_task?.turn_off ?? false, modal_selectors);
       moveCurrentTask(psstObj, undefined);
     } catch (error) {
+      logger.warn(`Failed to apply setting for current task, error:${(error as Error).message}`);
       moveCurrentTask(psstObj, (error as Error).message);
     }
 
@@ -77,9 +77,11 @@ export abstract class PolicyScriptBase {
     psstObj.progress = calculateProgress(psstObj);
 
     if (psstObj.state === PsstState.COMPLETED) {
+      logger.info('PSST flow completed');
       // Clean up storage on finish
       this.cleanPsstDataStorage();
     } else {
+      logger.info('Advancing to next PSST task');
       this.savePsstDataToStorage(psstObj);
     }
 
@@ -95,12 +97,12 @@ export abstract class PolicyScriptBase {
     try {
       const stored = sessionStorage.getItem(PSST_STORAGE_KEY);
       if (!stored) {
-        if (__DEV__) logger.info('No existing PsstData found in sessionStorage.');
+        logger.info('No existing PsstData found in sessionStorage.');
         return undefined;
       }
 
       const parsed = JSON.parse(stored);
-
+      logger.debug('Loaded PSST data', parsed);
       return {
         applied_tasks: parsed.applied_tasks ?? [],
         current_task: parsed.current_task ?? undefined,
@@ -110,29 +112,29 @@ export abstract class PolicyScriptBase {
         tasks_list: parsed.tasks_list ?? []
       } as PsstData;
     } catch (error) {
-      if (__DEV__) logger.error('Failed to parse PsstData from sessionStorage:', error);
+      logger.error('Failed to parse PsstData from sessionStorage:', error);
       return undefined;
     }
   }
 
   protected savePsstDataToStorage(psstData: PsstData): void {
     try {
-      if (__DEV__) logger.info('Saving PsstData:', JSON.stringify(psstData));
+      logger.info('Saving PsstData:', psstData);
       sessionStorage.setItem(PSST_STORAGE_KEY, JSON.stringify({
         ...psstData,
         updated_at: Date.now(),
       }));
     } catch (error) {
-      if (__DEV__) logger.error('Failed to save PsstData to sessionStorage:', error);
+      logger.error('Failed to save PsstData to sessionStorage:', error);
     }
   }
 
   protected cleanPsstDataStorage(): void {
     try {
-      if (__DEV__) logger.info('Clean PsstData to sessionStorage');
+      logger.info('Clean PsstData to sessionStorage');
       sessionStorage.removeItem(PSST_STORAGE_KEY);
     } catch (error) {
-      if (__DEV__) logger.error('Failed to clean PsstData in the sessionStorage:', error);
+      logger.error('Failed to clean PsstData in the sessionStorage:', error);
     }
   }
 
@@ -142,8 +144,7 @@ export abstract class PolicyScriptBase {
     const hostParams = typeof window !== 'undefined' ? window.__bravePsstParams : undefined;
     const legacyParams = typeof params !== 'undefined' ? params : undefined;
     const rawParams = hostParams ?? legacyParams ?? '{}';
-    if (__DEV__)
-      logger.debug('Parsing PolicyScriptInputData from params:', JSON.stringify(rawParams));
+    logger.debug('Parsing PolicyScriptInputData from params:', rawParams);
     const parsed =
         typeof rawParams === 'string' ? JSON.parse(rawParams) : rawParams;
 

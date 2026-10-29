@@ -29,15 +29,13 @@ export class ChatGptPolicyScript extends PolicyScriptBase {
               targetSelector, 800);  // short wait for the effect
           opened = true;
         } catch {
-          if (__DEV__)
-            logger.debug(`open-modal retry ${
+          logger.debug(`open-modal retry ${
                 retry + 1}: toggle not up yet, re-clicking`);
           const btn = document.querySelector<HTMLElement>(lastModal.selector);
           if (btn) this.dispatchRealisticClick(btn, lastModal.event);
         }
       }
-      if (__DEV__)
-        logger.debug('open-modal outcome: ' + JSON.stringify({opened}));
+      logger.debug('open-modal outcome: ' + JSON.stringify({opened}));
     }
 
     return new Promise((resolve, reject) => {
@@ -89,14 +87,14 @@ export class ChatGptPolicyScript extends PolicyScriptBase {
       modalSelectors: ModalSelectorData[]|
       undefined): Promise<string[]|undefined> {
     if (!modalSelectors || modalSelectors.length === 0) {
-      if (__DEV__) logger.debug('No modal selectors provided');
+      logger.debug('No modal selectors provided');
       return undefined;
     }
 
     const errors: string[] = [];
     for (let index = 0; index < modalSelectors.length; index++) {
       const modalSelector = modalSelectors[index];
-      if (__DEV__) logger.debug(
+      logger.debug(
           `Run iteration: "${index + 1}/${modalSelectors.length}"`);
       if (modalSelector) {
         try {
@@ -105,7 +103,7 @@ export class ChatGptPolicyScript extends PolicyScriptBase {
         } catch (error) {
           const errorMessage = `${index + 1}/${modalSelectors.length}: ${
               (error as Error).message}`;
-          if (__DEV__) logger.debug(errorMessage);
+          logger.debug(errorMessage);
           errors.push(errorMessage);
         }
       }

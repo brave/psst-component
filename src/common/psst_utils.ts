@@ -97,16 +97,14 @@ export const isInitialExecution =
         });
 
         if (!isNotExpired || !onExpectedStep) {
-          if (__DEV__)
-            logger.debug(`Detected broken PSST flow; expired:${
+          logger.debug(`Detected broken PSST flow; expired:${
                 !isNotExpired} wrong step: ${!onExpectedStep}`);
           return true;
         }
 
         return false;
       } catch (error) {
-        if (__DEV__)
-          logger.error('Failed to parse PsstData from sessionStorage:', error);
+        logger.error('Failed to parse PsstData from sessionStorage:', error);
         return true;
       }
     }
@@ -163,8 +161,7 @@ export async function waitForElementWithRetry(
       await waitForElement(selector, timeout);
       opened = true;
     } catch {
-      if (__DEV__)
-        logger.debug(
+      logger.debug(
             `waitForElementWithRetry retry ${retry + 1}: element:${selector} not up yet, retrying`);
     }
   }

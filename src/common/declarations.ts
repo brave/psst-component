@@ -23,6 +23,8 @@ export interface PolicyScriptInputData extends UserScriptData {
     initial_execution: boolean;
 }
 
+export type PsstLogLevel = 'debug' | 'info' | 'warn' | 'error';
+
 declare global {
     // Compile-time build flag injected by webpack's DefinePlugin.
     // `true` in development builds, `false` (and dead-code-eliminated) in production.
@@ -45,4 +47,13 @@ declare global {
         UserScriptInstance: UserScriptBase;
         PolicyScriptInstance: PolicyScriptBase;
     }
+
+    // Installed by the browser's native PSST bootstrap (see brave-core's
+    // psst_js_handler.cc) in the isolated world these scripts run in.
+    // Declared as possibly-`undefined` rather than a plain `function` so
+    // every call site is forced to feature-detect it -- the component is
+    // shipped independently of the browser, so a build can reach users on a
+    // browser version that predates this native API. Use `logger` or
+    // `psstLog()` from `./logger` instead of calling this directly.
+    var psstLog: ((level: PsstLogLevel, message: string, data?: Record<string, unknown>) => void) | undefined;
 }

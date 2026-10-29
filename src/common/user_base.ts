@@ -28,10 +28,10 @@ export abstract class UserScriptBase {
   getTasks(): UserScriptData|undefined {
     try {
       const userId = this.getUserId();
-      if (__DEV__) logger.info('Getting tasks for user ID:', userId);
+      logger.info(`Getting tasks for user ID: ${userId}`);
 
       if (!userId) {
-        if (__DEV__) logger.debug('Do not continue with tasks as no signed in user');
+        logger.debug('Do not continue with tasks as no signed in user');
         return undefined;
       }
 
@@ -42,17 +42,15 @@ export abstract class UserScriptBase {
       };
 
       const countryId = this.getParams().countryId;
-      if (__DEV__)
-        logger.debug('countryId:', JSON.stringify(countryId));
+      logger.debug(`countryId: ${countryId}`);
 
       userData.tasks = userData.tasks.filter(
           task => isTaskAvailableForCountry(task, countryId));
 
-      if (__DEV__)
-        logger.debug('Constructed UserScriptData:', JSON.stringify(userData));
+      logger.debug('Constructed UserScriptData:', userData);
       return userData;
     } catch (error) {
-      if (__DEV__) logger.error('Failed to construct UserScriptData:', error);
+      logger.error(`Failed to construct UserScriptData  error:${(error as Error).message}`);
       return undefined;
     }
   }
@@ -67,8 +65,7 @@ export abstract class UserScriptBase {
     // so a missing binding yields a fallback instead of a ReferenceError.
     const hostParams = typeof window !== 'undefined' ? window.__bravePsstParams : undefined;
     const rawParams = hostParams ?? '{}';
-    if (__DEV__)
-      logger.debug('Parsing UserScriptInputData from params:', JSON.stringify(rawParams));
+    logger.debug('Parsing UserScriptInputData from params', rawParams);
     const parsed =
         typeof rawParams === 'string' ? JSON.parse(rawParams) : rawParams;
 

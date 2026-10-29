@@ -68,8 +68,7 @@ export class LinkedinUserScript extends UserScriptBase {
     } catch (error) {
       const errorMessage =
           error instanceof Error ? error.message : String(error);
-      if (__DEV__)
-        logger.error(`Error extracting LinkedIn UID: ${errorMessage}`);
+      logger.error(`Error extracting LinkedIn UID: ${errorMessage}`);
       return undefined;
     }
   }
@@ -84,8 +83,7 @@ export class LinkedinUserScript extends UserScriptBase {
       const uid = (parsed as Partial<CachedUid>| null)?.uid;
       return typeof uid === 'string' && uid ? uid : undefined;
     } catch (error) {
-      if (__DEV__)
-        logger.error('Failed to parse psst_linkedin_uid cookie:', error);
+      logger.error('Failed to parse psst_linkedin_uid cookie:', error);
       return undefined;
     }
   }
