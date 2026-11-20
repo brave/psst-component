@@ -156,7 +156,7 @@ describe('isInitialExecution', () => {
     expect(isInitialExecution()).toBe(true);
   });
 
-  it('returns true when the stored pathname differs from the current page', () => {
+  it('returns true when only the pathname differs even though the origin matches', () => {
     storeStartedFlow({ start_url: new URL('/other-page', CURRENT_URL).toString() });
 
     expect(isInitialExecution()).toBe(true);
@@ -170,6 +170,24 @@ describe('isInitialExecution', () => {
 
   it('returns true when neither current_task.url nor start_url is set', () => {
     storeStartedFlow({ start_url: '' });
+
+    expect(isInitialExecution()).toBe(true);
+  });
+
+  it('returns true when redirected to an unrelated same-origin page while a task is active', () => {
+    storeStartedFlow({
+      start_url: new URL('/original-settings-page', CURRENT_URL).toString(),
+      current_task: makeTask({ url: new URL('/task-step', CURRENT_URL).toString() })
+    });
+
+    expect(isInitialExecution()).toBe(true);
+  });
+
+  it('returns true when a redirect takes us to a different origin even with an active task', () => {
+    storeStartedFlow({
+      start_url: CURRENT_URL,
+      current_task: makeTask({ url: 'https://malicious.example/task-step' })
+    });
 
     expect(isInitialExecution()).toBe(true);
   });

@@ -5,13 +5,14 @@
 // You can obtain one at https://mozilla.org/MPL/2.0/
 
 import { PolicyScriptBase } from "../common/policy_base";
-import { waitForElementWithRetry, type ModalSelectorData } from "../common/psst_utils";
-
+import {logger} from '../common/logger';
+import { isFallbackPage, waitForElementWithRetry, type ModalSelectorData } from "../common/psst_utils";
 
 export class LinkedInPolicyScript extends PolicyScriptBase {
     async waitForSettingAppliedWithTimeout(selectorData: ModalSelectorData | undefined, turnOff: boolean, modalSelectors: ModalSelectorData[] | undefined): Promise<void> {
         const targetSelector = selectorData?.selector;
-        if (targetSelector) {
+        if (!isFallbackPage() && targetSelector) {
+            if (__DEV__) logger.debug(`Starts to wait for element:${targetSelector} on the page: ${location.href}`);
             await waitForElementWithRetry(targetSelector);
         }
         
@@ -26,12 +27,20 @@ export class LinkedInPolicyScript extends PolicyScriptBase {
 
             const wrappedReject = (errorDescription: string|null = null) => {
               attemptCount++;
-              if (attemptCount >=
+
+              if (isFallbackPage()) {
+                const message = 'Skipped fallback page';
+                if (__DEV__) logger.debug(message);
+                if (intervalId) clearInterval(intervalId);
+                reject(new Error(message));
+              } else if (
+                  attemptCount >=
                   LinkedInPolicyScript.WAIT_FOR_PAGE_ATTEMPTS_COUNT) {
                 if (intervalId) clearInterval(intervalId);
                 reject(new Error(`Checkbox not found after ${
                     LinkedInPolicyScript
-                        .WAIT_FOR_PAGE_ATTEMPTS_COUNT} attempts. Error: ${errorDescription}`));
+                        .WAIT_FOR_PAGE_ATTEMPTS_COUNT} attempts. Error: ${
+                    errorDescription}`));
               }
             };
 
